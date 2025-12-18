@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Woodcutter RPG.sln"
+    "dotnet.defaultSolution": "Last-Light.sln"
 }
