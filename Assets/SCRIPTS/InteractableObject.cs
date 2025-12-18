@@ -6,9 +6,6 @@ public class InteractableObject : MonoBehaviour
 {
     public string ItemName;
     
-    // NEW: Add sprite for inventory icon
-    public Sprite itemIcon;
-    
     public bool playerInRange;
     
     public string GetItemName()
@@ -21,19 +18,8 @@ public class InteractableObject : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Mouse0) && playerInRange && SelectionManager.instance.onTarget)
         {
             Debug.Log("Interacted with " + ItemName);
-            
-            // NEW: Add to inventory before destroying
-            if (InventorySystem.Instance != null && itemIcon != null)
-            {
-                InventorySystem.Instance.AddToInventory(ItemName, itemIcon);
-                Destroy(gameObject);
-            }
-            else
-            {
-                Debug.LogWarning("Cannot add item: InventorySystem or itemIcon is missing!");
-            }
-            
-            
+            // Pick up (destroy the object)
+            Destroy(gameObject);
         }
     }
     
