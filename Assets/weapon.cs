@@ -52,7 +52,14 @@ public class weapon : MonoBehaviour
     }
 
     private void Update()
-    {
+    { 
+        if(bulletsLeft==0 && isShooting)
+        {
+            SoundManager.Instance.emptyManagizeSound1911.Play();
+        }
+
+
+
         // INPUT
         if (currentShootingMode == ShootingMode.Auto)
             isShooting = Input.GetKey(KeyCode.Mouse0);
@@ -124,6 +131,12 @@ public class weapon : MonoBehaviour
 
     private void Reload()
     {
+          
+        
+        SoundManager.Instance.reloadingSound1911.Play();
+        
+
+
         isReloading = true;
         Invoke(nameof(ReloadCompleted), reloadTime);
     }
