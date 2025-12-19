@@ -15,6 +15,7 @@ public class DoorMech : MonoBehaviour
 	void Start()
 	{
 		doorBool = false;
+		CloseRotation = transform.rotation.eulerAngles;
 	}
 		
 	void OnTriggerStay(Collider col)
