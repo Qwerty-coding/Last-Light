@@ -22,7 +22,7 @@ public class PlayerHealth : MonoBehaviour
     {
         // --- TEMPORARY TESTING CODE ---
         // Press SPACEBAR to hurt yourself. Delete this later!
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.N))
         {
             TakeDamage(10);
         }
