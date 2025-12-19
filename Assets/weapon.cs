@@ -1,9 +1,10 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public class weapon : MonoBehaviour
 {
-    public Camera playerCamera;
+    // public Camera playerCamera;
 
     public bool isShooting;
     public bool readyToShoot = true;
@@ -20,7 +21,14 @@ public class weapon : MonoBehaviour
     public Transform bulletSpawn;
     public float bulletVelocity = 30f;
     public float bulletLifeTime = 3f;
+    public GameObject muzzleEffect;
+    // Reload & Ammo
+    public float reloadTime = 1.5f;
+    public int magazineSize = 30;
+    public int bulletsLeft;
+    public bool isReloading;
 
+    
     public enum ShootingMode
     {
         Single,
@@ -33,30 +41,49 @@ public class weapon : MonoBehaviour
     private void Awake()
     {
         burstBulletsLeft = bulletsPerBurst;
+        bulletsLeft = magazineSize;
     }
 
     private void Update()
     {
-        // Input handling
+        // INPUT
         if (currentShootingMode == ShootingMode.Auto)
-        {
             isShooting = Input.GetKey(KeyCode.Mouse0);
-        }
         else
-        {
             isShooting = Input.GetKeyDown(KeyCode.Mouse0);
+
+        // MANUAL RELOAD
+        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !isReloading)
+        {
+            Reload();
         }
 
-        // Shooting logic
-        if (readyToShoot && isShooting)
+        // AUTO RELOAD
+        if (readyToShoot && isShooting && !isReloading && bulletsLeft <= 0)
+        {
+            Reload();
+            return;
+        }
+
+        // SHOOT
+        if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
         {
             burstBulletsLeft = bulletsPerBurst;
             FireWeapon();
+        }
+
+        // UI
+        if (Ammomanager.Instance.ammoDisplay != null)
+        {
+            Ammomanager.Instance.ammoDisplay.text = $"{bulletsLeft} / {magazineSize}";
         }
     }
 
     private void FireWeapon()
     {
+        muzzleEffect.GetComponent<ParticleSystem>().Play();
+
+        bulletsLeft--;
         readyToShoot = false;
 
         Vector3 direction = CalculateDirectionAndSpread().normalized;
@@ -85,6 +112,18 @@ public class weapon : MonoBehaviour
         }
     }
 
+    private void Reload()
+    {
+        isReloading = true;
+        Invoke(nameof(ReloadCompleted), reloadTime);
+    }
+
+    private void ReloadCompleted()
+    {
+        bulletsLeft = magazineSize;
+        isReloading = false;
+    }
+
     private void ResetShot()
     {
         readyToShoot = true;
@@ -93,7 +132,7 @@ public class weapon : MonoBehaviour
 
     private Vector3 CalculateDirectionAndSpread()
     {
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
 
         Vector3 targetPoint = Physics.Raycast(ray, out hit)
