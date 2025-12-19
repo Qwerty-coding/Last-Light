@@ -1,6 +1,9 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using System.Runtime.CompilerServices;
+using System.Data.SqlTypes;
+using System.Reflection;
 
 public class weapon : MonoBehaviour
 {
@@ -22,6 +25,7 @@ public class weapon : MonoBehaviour
     public float bulletVelocity = 30f;
     public float bulletLifeTime = 3f;
     public GameObject muzzleEffect;
+    private Animator animator;
     // Reload & Ammo
     public float reloadTime = 1.5f;
     public int magazineSize = 30;
@@ -40,8 +44,11 @@ public class weapon : MonoBehaviour
 
     private void Awake()
     {
+        readyToShoot = true;
         burstBulletsLeft = bulletsPerBurst;
         bulletsLeft = magazineSize;
+        animator = GetComponent<Animator>();
+
     }
 
     private void Update()
@@ -82,7 +89,10 @@ public class weapon : MonoBehaviour
     private void FireWeapon()
     {
         muzzleEffect.GetComponent<ParticleSystem>().Play();
+        
+        animator.SetTrigger("RECOIL");
 
+        SoundManager.Instance.shootingSound1911.Play();
         bulletsLeft--;
         readyToShoot = false;
 
