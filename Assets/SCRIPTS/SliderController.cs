@@ -12,7 +12,7 @@ public class SliderController : MonoBehaviour
     public void SliderChange(float value)
     {
         float LocalValue = value*maxSliderAmount;
-        sliderText.text=LocalValue.ToString("0");
+        sliderText.text=LocalValue.ToString("0.0");
 
     }
 
