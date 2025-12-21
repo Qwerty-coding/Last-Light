@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameManagerBehaviour : MonoBehaviour
 {   
     [SerializeField]
     GameObject pauseMenu;
+
+    [SerializeField] 
+    GameObject ammoTextUI;
 
     public static bool isPaused;
     // Start is called before the first frame update
@@ -35,6 +39,10 @@ public class GameManagerBehaviour : MonoBehaviour
     private void PauseGame()
     {
         pauseMenu.SetActive(true);
+
+        if(ammoTextUI != null)
+        ammoTextUI.SetActive(false);
+        
         isPaused=true;
         Time.timeScale=0f;
         Cursor.lockState = CursorLockMode.None; // Unlocks the cursor so it can move
@@ -44,6 +52,10 @@ public class GameManagerBehaviour : MonoBehaviour
     public void ResumeGame()
     {
         pauseMenu.SetActive(false);
+
+        if(ammoTextUI != null) 
+            ammoTextUI.SetActive(true);
+
         isPaused=false;
         Time.timeScale=1f;
         Cursor.lockState = CursorLockMode.Locked; // Locks cursor to center of screen
