@@ -51,47 +51,53 @@ public class weapon : MonoBehaviour
 
     }
 
-    private void Update()
-    { 
-        if(bulletsLeft==0 && isShooting)
-        {
-            SoundManager.Instance.emptyManagizeSound1911.Play();
-        }
+  void Update()
+{
+    // 1. CRITICAL: Stop everything if the game is paused
+    if (GameManagerBehaviour.isPaused) return;
 
-
-
-        // INPUT
-        if (currentShootingMode == ShootingMode.Auto)
-            isShooting = Input.GetKey(KeyCode.Mouse0);
-        else
-            isShooting = Input.GetKeyDown(KeyCode.Mouse0);
-
-        // MANUAL RELOAD
-        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !isReloading)
-        {
-            Reload();
-        }
-
-        // AUTO RELOAD
-        if (readyToShoot && isShooting && !isReloading && bulletsLeft <= 0)
-        {
-            Reload();
-            return;
-        }
-
-        // SHOOT
-        if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
-        {
-            burstBulletsLeft = bulletsPerBurst;
-            FireWeapon();
-        }
-
-        // UI
-        if (Ammomanager.Instance.ammoDisplay != null)
-        {
-            Ammomanager.Instance.ammoDisplay.text = $"{bulletsLeft} / {magazineSize}";
-        }
+    // 2. Play empty magazine sound (preventing frame-by-frame spam)
+    if (bulletsLeft == 0 && isShooting)
+    {
+        // Tip: Consider using a cooldown or GetKeyDown here to avoid audio noise
+        SoundManager.Instance.emptyManagizeSound1911.Play();
     }
+
+    // 3. INPUT HANDLING
+    // We also check !EventSystem.current.IsPointerOverGameObject() 
+    // to ensure you aren't clicking on a UI button.
+    bool mouseClicked = currentShootingMode == ShootingMode.Auto ? 
+                        Input.GetKey(KeyCode.Mouse0) : 
+                        Input.GetKeyDown(KeyCode.Mouse0);
+
+    isShooting = mouseClicked;
+
+    // 4. RELOAD LOGIC
+    if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !isReloading)
+    {
+        Reload();
+    }
+
+    // AUTO RELOAD
+    if (readyToShoot && isShooting && !isReloading && bulletsLeft <= 0)
+    {
+        Reload();
+        return;
+    }
+
+    // 5. SHOOT LOGIC
+    if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
+    {
+        burstBulletsLeft = bulletsPerBurst;
+        FireWeapon();
+    }
+
+    // 6. UI UPDATE
+    if (Ammomanager.Instance.ammoDisplay != null)
+    {
+        Ammomanager.Instance.ammoDisplay.text = $"{bulletsLeft} / {magazineSize}";
+    }
+}
 
     private void FireWeapon()
     {
