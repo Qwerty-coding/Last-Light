@@ -4,6 +4,8 @@ using TMPro;
 using System.Runtime.CompilerServices;
 using System.Data.SqlTypes;
 using System.Reflection;
+using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class weapon : MonoBehaviour
 {
@@ -66,6 +68,14 @@ public class weapon : MonoBehaviour
     // 3. INPUT HANDLING
     // We also check !EventSystem.current.IsPointerOverGameObject() 
     // to ensure you aren't clicking on a UI button.
+    // Check if the mouse is over a UI element
+        if (EventSystem.current.IsPointerOverGameObject())
+        {
+            // If over UI, stop shooting and exit this frame
+            isShooting = false;
+            return;
+        }
+        
     bool mouseClicked = currentShootingMode == ShootingMode.Auto ? 
                         Input.GetKey(KeyCode.Mouse0) : 
                         Input.GetKeyDown(KeyCode.Mouse0);
