@@ -11,6 +11,9 @@ public class PlayerHealth : MonoBehaviour
     // Drag your 'HealthBarFill' image here in the Inspector
     public Image healthBarFill; 
 
+[Header("Game Manager Reference")]
+    public GameManagerScript gameManager; // <--- ADD THIS LINE
+
     void Start()
     {
         // Start with full health
@@ -62,6 +65,10 @@ public class PlayerHealth : MonoBehaviour
     void Die()
     {
         Debug.Log("Player has died!");
+        if (gameManager != null)
+        {
+            gameManager.TriggerGameOver();
+        }
         // Later we will add: SceneManager.LoadScene("GameOver");
     }
 }
