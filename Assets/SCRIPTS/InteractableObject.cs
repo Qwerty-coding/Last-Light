@@ -15,7 +15,7 @@ public class InteractableObject : MonoBehaviour
     
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0) && playerInRange && SelectionManager.instance.onTarget)
+        if (Input.GetKeyDown(KeyCode.E) && playerInRange && SelectionManager.instance.onTarget)
         {
             Debug.Log("Interacted with " + ItemName);
             // Pick up (destroy the object)
