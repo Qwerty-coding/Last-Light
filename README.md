@@ -19,3 +19,6 @@ Version Control: Git / GitHub
 | **Interaction** | **`E`** | Open Doors / Pick Up Items |
 | **System** | **`Esc`** | Pause Menu |
 | **Debug / Testing** | **`N`** | Deduct 10 Health (Test Damage) |
+
+## 📋 The Game Plan (Gameplay Loop)
+Objective: Survive a single night in a forest ranger station and signal for help.
