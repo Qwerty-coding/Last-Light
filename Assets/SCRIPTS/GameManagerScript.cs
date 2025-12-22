@@ -1,83 +1,126 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement; // Required for Scene changing
+using UnityEngine.SceneManagement;
+using UnityEngine.UI; // Required for UI elements
 
 public class GameManagerScript : MonoBehaviour
 {
-    public GameObject gameOverUI; // Reference to your Game Over Screen object
-    public GameObject ammoUI;     // <--- ADD THIS LINE (New variable for ammo text)
-    public CanvasGroup gameOverCanvasGroup; // <--- ADD THIS LINE
+    [Header("UI References")]
+    public GameObject gameOverUI;           // Your Game Over Screen
+    public GameObject ammoUI;               // Your "0/0" text
+    public CanvasGroup gameOverCanvasGroup; // The Canvas Group on the Game Over Screen
+    public CanvasGroup transitionOverlay;   // <--- NEW: The Black Panel (TransitionPanel)
+
     void Start()
     {
-        // Ensure the game over screen is hidden when the game starts
+        // 1. Setup Game Over Screen (Hide it)
         if (gameOverUI != null)
         {
             gameOverUI.SetActive(false);
+            gameOverUI.transform.localScale = Vector3.zero; // Start tiny
         }
-        if (ammoUI != null) ammoUI.SetActive(true); // <--- ADD THIS LINE (Ensures ammo is visible at start)
+        
+        // 2. Setup Ammo (Show it)
+        if (ammoUI != null) ammoUI.SetActive(true);
+
+        // 3. Setup Transition Panel (Make it invisible and non-blocking)
+        if (transitionOverlay != null)
+        {
+            transitionOverlay.alpha = 0f;
+            transitionOverlay.blocksRaycasts = false; // Allow clicks
+        }
     }
 
     public void TriggerGameOver()
     {
-        // 1. Hide the Ammo
+        // Hide the ammo counter
         if (ammoUI != null) ammoUI.SetActive(false);
 
-        // 2. Show the Game Over Screen
         if (gameOverUI != null)
         {
             gameOverUI.SetActive(true);
             
-            // 3. Pause the game physics immediately
+            // Pause physics immediately
             Time.timeScale = 0f;
 
-            // 4. Unlock the mouse cursor
+            // Unlock cursor so you can click buttons
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // 5. Start the fade animation (if assigned)
+            // Start the Pop-Up Animation
             if (gameOverCanvasGroup != null)
             {
-                // Reset alpha to 0 (invisible) before starting
                 gameOverCanvasGroup.alpha = 0f;
-                gameOverUI.transform.localScale = Vector3.zero; // <--- NEW LINE: Makes it tiny!
+                gameOverUI.transform.localScale = Vector3.zero;
                 StartCoroutine(FadeInScreen());
             }
         }
     }
 
-    // Call this from your "Restart" button
     public void RestartGame()
     {
-        Time.timeScale = 1f; // IMPORTANT: Unpause time before reloading
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    // Call this from your "Main Menu" button
     public void LoadMainMenu()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("MainMenu"); // Make sure this matches your menu scene name exactly
+        Time.timeScale = 1f; // Must unpause to let animation play
+        StartCoroutine(FadeOutAndLoad()); // <--- NEW: Calls the black fade routine
     }
+
+    // ANIMATION 1: Game Over Pop-Up (Zoom + Fade In)
     System.Collections.IEnumerator FadeInScreen()
     {
-        float duration = 0.5f; // Animation takes 1 second
+        float duration = 0.3f; // Fast and snappy
         float timer = 0f;
 
         while (timer < duration)
         {
-            // We use 'unscaledDeltaTime' so it works even while the game is paused!
             timer += Time.unscaledDeltaTime;
+            float progress = timer / duration;
+
+            // Fade Alpha from 0 to 1
+            gameOverCanvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
             
-          float progress = timer / duration;
-gameOverCanvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
-gameOverUI.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, progress); // <--- NEW LINE: Grows it!
-            
-            yield return null; // Wait for next frame
+            // Zoom Scale from 0 to 1
+            gameOverUI.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, progress);
+
+            yield return null;
         }
 
-        gameOverCanvasGroup.alpha = 1f; // Ensure it's fully visible at the end
-        gameOverUI.transform.localScale = Vector3.one; // <--- NEW LINE: Ensures it finishes at full size
+        // Ensure final state
+        gameOverCanvasGroup.alpha = 1f;
+        gameOverUI.transform.localScale = Vector3.one;
     }
-    
+
+    // ANIMATION 2: Transition to Main Menu (Fade to Black)
+    System.Collections.IEnumerator FadeOutAndLoad()
+    {
+        // Block clicks so user doesn't double-click
+        if (transitionOverlay != null) 
+        {
+            transitionOverlay.blocksRaycasts = true; 
+        }
+
+        float duration = 0.5f; // Duration of fade to black
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.unscaledDeltaTime;
+            
+            if (transitionOverlay != null)
+            {
+                // Fade Alpha from 0 (Transparent) to 1 (Black)
+                transitionOverlay.alpha = Mathf.Lerp(0f, 1f, timer / duration);
+            }
+            yield return null;
+        }
+
+        // Wait a tiny moment at full black (optional polish)
+        yield return new WaitForSecondsRealtime(0.1f);
+
+        // Finally Load the Scene
+        SceneManager.LoadScene("MainMenu");
+    }
 }
