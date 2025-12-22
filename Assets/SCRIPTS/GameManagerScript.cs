@@ -40,6 +40,7 @@ public class GameManagerScript : MonoBehaviour
             {
                 // Reset alpha to 0 (invisible) before starting
                 gameOverCanvasGroup.alpha = 0f;
+                gameOverUI.transform.localScale = Vector3.zero; // <--- NEW LINE: Makes it tiny!
                 StartCoroutine(FadeInScreen());
             }
         }
@@ -60,7 +61,7 @@ public class GameManagerScript : MonoBehaviour
     }
     System.Collections.IEnumerator FadeInScreen()
     {
-        float duration = 1f; // Animation takes 1 second
+        float duration = 0.5f; // Animation takes 1 second
         float timer = 0f;
 
         while (timer < duration)
@@ -68,13 +69,15 @@ public class GameManagerScript : MonoBehaviour
             // We use 'unscaledDeltaTime' so it works even while the game is paused!
             timer += Time.unscaledDeltaTime;
             
-            // Math to smooth the fade from 0 to 1
-            gameOverCanvasGroup.alpha = Mathf.Lerp(0f, 1f, timer / duration);
+          float progress = timer / duration;
+gameOverCanvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
+gameOverUI.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, progress); // <--- NEW LINE: Grows it!
             
             yield return null; // Wait for next frame
         }
 
         gameOverCanvasGroup.alpha = 1f; // Ensure it's fully visible at the end
+        gameOverUI.transform.localScale = Vector3.one; // <--- NEW LINE: Ensures it finishes at full size
     }
     
 }
