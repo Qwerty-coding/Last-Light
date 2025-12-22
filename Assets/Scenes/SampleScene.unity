@@ -1714,7 +1714,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -281}
+  m_AnchoredPosition: {x: 0, y: -341}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &303781509
@@ -3955,6 +3955,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverUI: {fileID: 1942789952}
+  ammoUI: {fileID: 1595453878}
 --- !u!4 &828220896
 Transform:
   m_ObjectHideFlags: 0

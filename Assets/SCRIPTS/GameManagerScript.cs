@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement; // Required for Scene changing
 public class GameManagerScript : MonoBehaviour
 {
     public GameObject gameOverUI; // Reference to your Game Over Screen object
-
+    public GameObject ammoUI;     // <--- ADD THIS LINE (New variable for ammo text)
     void Start()
     {
         // Ensure the game over screen is hidden when the game starts
@@ -14,6 +14,7 @@ public class GameManagerScript : MonoBehaviour
         {
             gameOverUI.SetActive(false);
         }
+        if (ammoUI != null) ammoUI.SetActive(true); // <--- ADD THIS LINE (Ensures ammo is visible at start)
     }
 
     public void TriggerGameOver()
@@ -27,6 +28,7 @@ public class GameManagerScript : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
+        if (ammoUI != null) ammoUI.SetActive(false); // <--- ADD THIS LINE (Hides ammo when you die)
     }
 
     // Call this from your "Restart" button
