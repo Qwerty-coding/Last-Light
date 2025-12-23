@@ -60,6 +60,11 @@ public class GameManagerScript : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        if (FixedInventory.Instance != null)
+        {
+            FixedInventory.Instance.ResetInventory();
+        }
     }
 
     public void LoadMainMenu()
