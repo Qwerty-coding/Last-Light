@@ -2,18 +2,23 @@ using UnityEngine;
 
 public class ItemPickup : MonoBehaviour
 {
-    [Header("What is this item?")]
+    [Header("UI Info")]
+    public string itemName; // Name to show on screen (e.g. "Rusty Axe")
+
+    [Header("Inventory Settings")]
     public bool isGun;
     public bool isAxe;
     public int woodAmount = 0;
 
-    // Internal flag to track if player is close enough
-    private bool isPlayerInRange = false;
+    // Public so SelectionManager can read it
+    [HideInInspector]
+    public bool isPlayerInRange = false;
 
     private void Update()
     {
-        // 1. Check if Player is nearby AND presses 'E'
-        if (isPlayerInRange && Input.GetKeyDown(KeyCode.E))
+        // LOGIC: Press E + Player is Close + Looking at Object (SelectionManager)
+        // We use 'SelectionManager.instance.onTarget' to ensure we are actually looking at THIS object
+        if (Input.GetKeyDown(KeyCode.E) && isPlayerInRange && SelectionManager.instance.onTarget)
         {
             CollectItem();
         }
@@ -21,7 +26,6 @@ public class ItemPickup : MonoBehaviour
 
     private void CollectItem()
     {
-        // 2. Access the Inventory
         FixedInventory inventory = FixedInventory.Instance;
 
         if (inventory != null)
@@ -31,41 +35,41 @@ public class ItemPickup : MonoBehaviour
             if (isGun)
             {
                 inventory.GiveGun(); //
-                Debug.Log("Picked up Gun via E!");
+                Debug.Log("Picked up Gun");
                 itemPickedUp = true;
             }
             else if (isAxe)
             {
                 inventory.GiveAxe(); //
-                Debug.Log("Picked up Axe via E!");
+                Debug.Log("Picked up Axe");
                 itemPickedUp = true;
             }
             else if (woodAmount > 0)
             {
                 inventory.AddLogs(woodAmount); //
-                Debug.Log("Picked up Wood via E!");
+                Debug.Log("Picked up Wood");
                 itemPickedUp = true;
             }
 
-            // 3. Destroy object only after successful pickup
             if (itemPickedUp)
             {
+                // Clear the UI text immediately so it doesn't get stuck
+                SelectionManager.instance.onTarget = false;
+                SelectionManager.instance.interaction_Info_UI.SetActive(false);
+                
                 Destroy(gameObject);
             }
         }
     }
 
-    // 4. Detect when player walks INTO the trigger zone
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
             isPlayerInRange = true;
-            Debug.Log("Press E to pickup"); // Optional debug message
         }
     }
 
-    // 5. Detect when player walks OUT of the trigger zone
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Player"))
