@@ -2335,7 +2335,7 @@ GameObject:
   - component: {fileID: 737264332}
   - component: {fileID: 737264331}
   m_Layer: 0
-  m_Name: MouseTrail
+  m_Name: Mouse Trail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
