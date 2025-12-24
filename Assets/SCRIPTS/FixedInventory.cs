@@ -138,21 +138,7 @@ public class FixedInventory : MonoBehaviour
         Save();
     }
 
-    public bool TrySpendLogs(int amount)
-    {
-        if (LogsCount >= amount)
-        {
-            LogsCount -= amount;
-            // Update the UI immediately
-            OnLogsChanged.Invoke(LogsCount); 
-            return true; // Purchase successful
-        }
-        else
-        {
-            Debug.Log("Not enough wood!");
-            return false; // Failed
-        }
-    }
+    
 
     public void ClearInventory()
     {
