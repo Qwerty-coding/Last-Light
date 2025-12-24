@@ -11,6 +11,9 @@ public class PlayerHealth : MonoBehaviour
     // Drag your 'HealthBarFill' image here in the Inspector
     public Image healthBarFill; 
 
+    [Header("Damage Effect")]
+public DamageEffect damageEffect;
+
 [Header("Game Manager Reference")]
     public GameManagerScript gameManager; // <--- ADD THIS LINE
 
@@ -35,6 +38,12 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(float damageAmount)
     {
         currentHealth -= damageAmount; // Subtract damage
+
+        // Trigger the blood vignette
+if (damageEffect != null)
+{
+    damageEffect.ShowDamage();
+}
 
         // Prevent health from going below 0
         if (currentHealth < 0)
