@@ -138,6 +138,8 @@ public class FixedInventory : MonoBehaviour
         Save();
     }
 
+    
+
     public void ClearInventory()
     {
         hasGun = false;
