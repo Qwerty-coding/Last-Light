@@ -6,15 +6,14 @@ public class FixedInventoryUI : MonoBehaviour
     [Header("Weapon Icons")]
     public Image gunIcon;
     public Image axeIcon;
+    public Image keyIcon; // NEW
 
     [Header("Resource UI")]
-    public Image logIcon;       // NEW: Slot for the Log Picture
-    public Text logsCountText;  // Slot for the "0" Text
+    public Image logIcon;      
+    public Text logsCountText; 
 
     [Header("Visual Settings")]
-    // Grey and transparent when empty/0
     public Color lockedColor = new Color(0.2f, 0.2f, 0.2f, 0.4f); 
-    // White and fully visible when owned/ >0
     public Color unlockedColor = Color.white; 
 
     private void Start()
@@ -23,9 +22,21 @@ public class FixedInventoryUI : MonoBehaviour
         {
             FixedInventory.Instance.OnGunChanged.AddListener(UpdateGunUI);
             FixedInventory.Instance.OnAxeChanged.AddListener(UpdateAxeUI);
+            FixedInventory.Instance.OnKeyChanged.AddListener(UpdateKeyUI); // NEW
             FixedInventory.Instance.OnLogsChanged.AddListener(UpdateLogsUI);
 
             RefreshAll();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (FixedInventory.Instance != null)
+        {
+            FixedInventory.Instance.OnGunChanged.RemoveListener(UpdateGunUI);
+            FixedInventory.Instance.OnAxeChanged.RemoveListener(UpdateAxeUI);
+            FixedInventory.Instance.OnKeyChanged.RemoveListener(UpdateKeyUI); // NEW
+            FixedInventory.Instance.OnLogsChanged.RemoveListener(UpdateLogsUI);
         }
     }
 
@@ -33,41 +44,38 @@ public class FixedInventoryUI : MonoBehaviour
     {
         UpdateGunUI();
         UpdateAxeUI();
-        // Force update with current count
+        UpdateKeyUI(); // NEW
         UpdateLogsUI(FixedInventory.Instance.LogsCount); 
     }
 
     private void UpdateGunUI()
     {
         if (gunIcon != null)
-        {
-            // Logic: If true -> White. If false -> Grey.
             gunIcon.color = FixedInventory.Instance.HasGun ? unlockedColor : lockedColor;
-        }
     }
 
     private void UpdateAxeUI()
     {
         if (axeIcon != null)
-        {
             axeIcon.color = FixedInventory.Instance.HasAxe ? unlockedColor : lockedColor;
-        }
+    }
+
+    private void UpdateKeyUI() // NEW
+    {
+        if (keyIcon != null)
+            keyIcon.color = FixedInventory.Instance.HasKey ? unlockedColor : lockedColor;
     }
 
     private void UpdateLogsUI(int count)
     {
-        // 1. Determine the color based on count
-        // If count is greater than 0, use White. Else use Grey.
         Color targetColor = (count > 0) ? unlockedColor : lockedColor;
 
-        // 2. Apply color to the Text (the number)
         if (logsCountText != null)
         {
             logsCountText.text = count.ToString();
             logsCountText.color = targetColor;
         }
 
-        // 3. Apply color to the Icon (the log picture)
         if (logIcon != null)
         {
             logIcon.color = targetColor;

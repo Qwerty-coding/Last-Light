@@ -28,42 +28,66 @@ public class FixedInventory : MonoBehaviour
     [Header("Items")]
     [SerializeField] private bool hasGun = false;
     [SerializeField] private bool hasAxe = false;
+    [SerializeField] private bool hasKey = false; 
     [SerializeField] private int logsCount = 0;
 
     [Header("Events")]
+    // These are standard UnityEvents (void) so they match your other scripts
     public UnityEvent OnInventoryChanged = new UnityEvent();
     public UnityEvent OnGunChanged = new UnityEvent();
     public UnityEvent OnAxeChanged = new UnityEvent();
+    public UnityEvent OnKeyChanged = new UnityEvent(); 
     public IntEvent OnLogsChanged = new IntEvent();
 
     private const string PrefKey_Gun = "FixedInv_hasGun";
     private const string PrefKey_Axe = "FixedInv_hasAxe";
+    private const string PrefKey_Key = "FixedInv_hasKey";
     private const string PrefKey_Logs = "FixedInv_logs";
 
-   private void Awake()
+    private void Awake()
     {
         if (_instance == null)
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
-
-            // --- ADD THIS LINE BELOW ---
-            // This deletes all saved data immediately when the game starts
+            
+            // We do NOT call Load(). 
+            // We call ResetInventory() to force a clean slate every time the game starts.
             ResetInventory(); 
-            // ---------------------------
-
-            // You can remove or comment out 'Load();' since we just reset it
-            // Load(); 
         }
         else if (_instance != this)
         {
             Destroy(gameObject);
         }
     }
+
+    // --- ADDED THIS SECTION ---
+    private void Start()
+    {
+        // 1. Lock the cursor to the center of the screen
+        // This ensures your Raycast (which uses screen center) works immediately
+        Cursor.lockState = CursorLockMode.Locked;
+        
+        // 2. Hide the cursor so you only see your crosshair
+        Cursor.visible = false;
+
+        // 3. Fire events to ensure UI is ready
+        if (Application.isPlaying)
+        {
+            OnGunChanged?.Invoke();
+            OnAxeChanged?.Invoke();
+            OnKeyChanged?.Invoke();
+            OnLogsChanged?.Invoke(logsCount);
+            OnInventoryChanged?.Invoke();
+        }
+    }
+    // --------------------------
+
     #region Public API
 
     public bool HasGun => hasGun;
     public bool HasAxe => hasAxe;
+    public bool HasKey => hasKey;
     public int LogsCount => logsCount;
 
     public void GiveGun()
@@ -71,17 +95,6 @@ public class FixedInventory : MonoBehaviour
         if (!hasGun)
         {
             hasGun = true;
-            OnGunChanged?.Invoke();
-            OnInventoryChanged?.Invoke();
-            Save();
-        }
-    }
-
-    public void RemoveGun()
-    {
-        if (hasGun)
-        {
-            hasGun = false;
             OnGunChanged?.Invoke();
             OnInventoryChanged?.Invoke();
             Save();
@@ -99,12 +112,12 @@ public class FixedInventory : MonoBehaviour
         }
     }
 
-    public void RemoveAxe()
+    public void GiveKey()
     {
-        if (hasAxe)
+        if (!hasKey)
         {
-            hasAxe = false;
-            OnAxeChanged?.Invoke();
+            hasKey = true;
+            OnKeyChanged?.Invoke();
             OnInventoryChanged?.Invoke();
             Save();
         }
@@ -119,34 +132,16 @@ public class FixedInventory : MonoBehaviour
         Save();
     }
 
-    public bool RemoveLogs(int amount)
-    {
-        if (amount <= 0) return false;
-        if (logsCount < amount) return false;
-        logsCount -= amount;
-        OnLogsChanged?.Invoke(logsCount);
-        OnInventoryChanged?.Invoke();
-        Save();
-        return true;
-    }
-
-    public void SetLogs(int amount)
-    {
-        logsCount = Math.Max(0, amount);
-        OnLogsChanged?.Invoke(logsCount);
-        OnInventoryChanged?.Invoke();
-        Save();
-    }
-
-    
-
     public void ClearInventory()
     {
         hasGun = false;
         hasAxe = false;
+        hasKey = false; 
         logsCount = 0;
+        
         OnGunChanged?.Invoke();
         OnAxeChanged?.Invoke();
+        OnKeyChanged?.Invoke(); 
         OnLogsChanged?.Invoke(logsCount);
         OnInventoryChanged?.Invoke();
         Save();
@@ -160,6 +155,7 @@ public class FixedInventory : MonoBehaviour
     {
         PlayerPrefs.SetInt(PrefKey_Gun, hasGun ? 1 : 0);
         PlayerPrefs.SetInt(PrefKey_Axe, hasAxe ? 1 : 0);
+        PlayerPrefs.SetInt(PrefKey_Key, hasKey ? 1 : 0);
         PlayerPrefs.SetInt(PrefKey_Logs, logsCount);
         PlayerPrefs.Save();
     }
@@ -168,38 +164,30 @@ public class FixedInventory : MonoBehaviour
     {
         hasGun = PlayerPrefs.GetInt(PrefKey_Gun, hasGun ? 1 : 0) == 1;
         hasAxe = PlayerPrefs.GetInt(PrefKey_Axe, hasAxe ? 1 : 0) == 1;
+        hasKey = PlayerPrefs.GetInt(PrefKey_Key, hasKey ? 1 : 0) == 1; 
         logsCount = PlayerPrefs.GetInt(PrefKey_Logs, logsCount);
     }
-
-    #endregion
-
-    #region Debug helpers
 
     [ContextMenu("Reset Inventory")]
     public void ResetInventory()
     {
-        PlayerPrefs.DeleteKey(PrefKey_Gun);
-        PlayerPrefs.DeleteKey(PrefKey_Axe);
-        PlayerPrefs.DeleteKey(PrefKey_Logs);
+        PlayerPrefs.DeleteAll();
         ClearInventory();
     }
 
-    // --- NEW ADDITION BELOW THIS LINE ---
+    #endregion
     
 #if UNITY_EDITOR
-    // This runs automatically whenever you change a value in the Inspector
     private void OnValidate()
     {
-        // We only want to fire events if the game is actually running
         if (Application.isPlaying)
         {
             OnGunChanged?.Invoke();
             OnAxeChanged?.Invoke();
+            OnKeyChanged?.Invoke();
             OnLogsChanged?.Invoke(logsCount);
             OnInventoryChanged?.Invoke();
         }
     }
 #endif
-
-    #endregion
 }

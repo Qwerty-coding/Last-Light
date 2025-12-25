@@ -1,51 +1,70 @@
 using UnityEngine;
-using TMPro; // Use UnityEngine.UI if using Legacy Text
+using TMPro;
 
 public class SelectionManager : MonoBehaviour
 {
     public static SelectionManager instance { get; set; }
     public bool onTarget;
-    
+
     [Header("UI References")]
     public GameObject interaction_Info_UI;
-    TextMeshProUGUI interaction_text; // Change to 'Text' if using Legacy UI
+    TextMeshProUGUI interaction_text;
 
     private void Awake()
     {
-        if (instance != null && instance != this)
-        {
-            Destroy(gameObject);
-        }
-        else
-        {
-            instance = this;
-        }
+        if (instance != null && instance != this) Destroy(gameObject);
+        else instance = this;
     }
 
     private void Start()
     {
-        onTarget = false;
-        // Auto-get the text component from the UI object you dragged in
-        interaction_text = interaction_Info_UI.GetComponent<TextMeshProUGUI>();
+        if (interaction_Info_UI != null)
+            interaction_text = interaction_Info_UI.GetComponent<TextMeshProUGUI>();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit))
         {
-            var selectionTransform = hit.transform;
+            // 1. Check for Items
+            ItemPickup itemScript = hit.transform.GetComponentInParent<ItemPickup>();
 
-            // CHANGED: Now looks for 'ItemPickup' instead of 'InteractableObject'
-            ItemPickup itemScript = selectionTransform.GetComponent<ItemPickup>();
+            // 2. Check for Doors (FIXED SPELLING HERE)
+            KeyDoorMech keyDoorScript = hit.transform.GetComponentInParent<KeyDoorMech>();
 
-            // Check if we hit an item AND the player is close enough to it
-            if (itemScript != null && itemScript.isPlayerInRange)
+            if (itemScript != null)
+            {
+                if (itemScript.isPlayerInRange)
+                {
+                    onTarget = true;
+                    if (interaction_text != null) interaction_text.text = itemScript.itemName;
+                    interaction_Info_UI.SetActive(true);
+                }
+                else
+                {
+                    onTarget = false;
+                    interaction_Info_UI.SetActive(false);
+                }
+            }
+            // 3. Check if we hit the KeyDoor
+            else if (keyDoorScript != null)
             {
                 onTarget = true;
-                interaction_text.text = itemScript.itemName; // Get name from ItemPickup
+
+                if (interaction_text != null)
+                {
+                    if (keyDoorScript.isLocked)
+                        interaction_text.text = "Locked";
+                    else
+                        interaction_text.text = "Open";
+                }
+                
                 interaction_Info_UI.SetActive(true);
             }
             else

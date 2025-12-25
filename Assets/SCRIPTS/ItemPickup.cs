@@ -3,78 +3,77 @@ using UnityEngine;
 public class ItemPickup : MonoBehaviour
 {
     [Header("UI Info")]
-    public string itemName; // Name to show on screen (e.g. "Rusty Axe")
+    public string itemName;
 
     [Header("Inventory Settings")]
     public bool isGun;
     public bool isAxe;
+    public bool isKey; 
     public int woodAmount = 0;
 
-    // Public so SelectionManager can read it
-    [HideInInspector]
+    // Public so we can see it in Inspector while playing
     public bool isPlayerInRange = false;
+
+    // Double-pickup prevention
+    private bool wasCollected = false; 
 
     private void Update()
     {
-        // LOGIC: Press E + Player is Close + Looking at Object (SelectionManager)
-        // We use 'SelectionManager.instance.onTarget' to ensure we are actually looking at THIS object
-        if (Input.GetKeyDown(KeyCode.E) && isPlayerInRange && SelectionManager.instance.onTarget)
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            CollectItem();
+            if (isPlayerInRange && SelectionManager.instance.onTarget) 
+            {
+                if(SelectionManager.instance.interaction_Info_UI.activeSelf) 
+                {
+                    CollectItem();
+                }
+            }
         }
     }
 
     private void CollectItem()
     {
+        if (wasCollected) return;
+
         FixedInventory inventory = FixedInventory.Instance;
 
         if (inventory != null)
         {
             bool itemPickedUp = false;
 
-            if (isGun)
-            {
-                inventory.GiveGun(); //
-                Debug.Log("Picked up Gun");
-                itemPickedUp = true;
-            }
-            else if (isAxe)
-            {
-                inventory.GiveAxe(); //
-                Debug.Log("Picked up Axe");
-                itemPickedUp = true;
-            }
-            else if (woodAmount > 0)
-            {
-                inventory.AddLogs(woodAmount); //
-                Debug.Log("Picked up Wood");
-                itemPickedUp = true;
-            }
+            if (isGun) { inventory.GiveGun(); itemPickedUp = true; }
+            else if (isAxe) { inventory.GiveAxe(); itemPickedUp = true; }
+            else if (isKey) { inventory.GiveKey(); itemPickedUp = true; }
+            else if (woodAmount > 0) { inventory.AddLogs(woodAmount); itemPickedUp = true; }
 
             if (itemPickedUp)
             {
-                // Clear the UI text immediately so it doesn't get stuck
-                SelectionManager.instance.onTarget = false;
-                SelectionManager.instance.interaction_Info_UI.SetActive(false);
-                
+                wasCollected = true;
+                if (SelectionManager.instance != null)
+                {
+                    SelectionManager.instance.onTarget = false;
+                    SelectionManager.instance.interaction_Info_UI.SetActive(false);
+                }
                 Destroy(gameObject);
             }
         }
     }
 
+    // --- DEBUG TRIGGERS ---
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        // Print EXACTLY what touched the trigger
+        Debug.Log("Something touched the trigger: " + other.name + " | Tag: " + other.tag);
+
+        if (other.CompareTag("Player")) 
         {
+            Debug.Log("SUCCESS: Player Detected!");
             isPlayerInRange = true;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInRange = false;
-        }
+        if (other.CompareTag("Player")) isPlayerInRange = false;
     }
 }
