@@ -8,7 +8,9 @@ public class KeyDoorMech : MonoBehaviour
     public float rotSpeed = 2f;
 
     [Header("Lock Settings")]
-    public bool isLocked = false; 
+    public bool isLocked = false;
+    // MATCH THIS NAME EXACTLY TO YOUR PICKUP SCRIPT
+    public string keyID = "Key"; 
 
     private bool isOpen = false;
     private bool isPlayerInRange = false;
@@ -18,11 +20,8 @@ public class KeyDoorMech : MonoBehaviour
         // 1. INPUT: Player presses E
         if (Input.GetKeyDown(KeyCode.E))
         {
-            // --- DEBUGGING ---
-            // If the door doesn't open, check the Console for these values!
-            Debug.Log($"[Door Check] Range: {isPlayerInRange} | LookTarget: {SelectionManager.instance.onTarget} | Key: {FixedInventory.Instance.HasKey}");
-
             // 2. CHECK: Player is close AND looking at the door
+            // (Assumes you still have SelectionManager in your scene)
             if (isPlayerInRange && SelectionManager.instance.onTarget)
             {
                 TryToOpen();
@@ -38,15 +37,20 @@ public class KeyDoorMech : MonoBehaviour
     {
         if (isLocked)
         {
-            if (FixedInventory.Instance.HasKey)
+            // --- NEW CHECK: Ask SimpleInventory ---
+            if (SimpleInventory.Instance.HasItem(keyID))
             {
-                Debug.Log("Key Used! Opening door.");
-                isLocked = false; // Unlock it forever
+                Debug.Log($"Key '{keyID}' Used! Opening door.");
+                
+                // Optional: Remove key after use? 
+                // SimpleInventory.Instance.RemoveItem(keyID); 
+                
+                isLocked = false; // Unlock forever
                 isOpen = !isOpen; 
             }
             else
             {
-                Debug.Log("Locked! You need the Key.");
+                Debug.Log($"Locked! You need the item: {keyID}");
             }
         }
         else

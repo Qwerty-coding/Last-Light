@@ -3,70 +3,85 @@ using UnityEngine;
 public class WeaponHandler : MonoBehaviour
 {
     [Header("The Parents")]
-    // Drag 'WeaponSpawn' here. 
-    // Since Ammo/Sound/UI are children of it, they will vanish too!
     public GameObject gunParent; 
-    
-    // Drag 'Axe_Parent' here
     public GameObject axeParent; 
 
     private void Start()
     {
         // 1. Start with everything hidden
-        if (gunParent != null) gunParent.SetActive(false);
-        if (axeParent != null) axeParent.SetActive(false);
-        
-        // 2. Listen for Inventory
-        if (FixedInventory.Instance != null)
+        HideAllWeapons();
+
+        // 2. Listen for Inventory Changes (Optional: Auto-equip on pickup)
+        if (SimpleInventory.Instance != null)
         {
-            FixedInventory.Instance.OnGunChanged.AddListener(OnGunPickedUp);
-            FixedInventory.Instance.OnAxeChanged.AddListener(OnAxePickedUp);
+            SimpleInventory.Instance.OnInventoryChange.AddListener(OnInventoryUpdated);
         }
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) ToggleGun();
-        if (Input.GetKeyDown(KeyCode.Alpha2)) ToggleAxe();
+        // Press 1 for Gun, 2 for Axe
+        if (Input.GetKeyDown(KeyCode.Alpha1)) ToggleWeapon("Gun");
+        if (Input.GetKeyDown(KeyCode.Alpha2)) ToggleWeapon("Axe");
     }
 
-    private void OnGunPickedUp()
+    // This runs automatically when you pick something up
+    private void OnInventoryUpdated()
     {
-        if (FixedInventory.Instance.HasGun)
+        // OPTIONAL: If we picked up a gun and hands are empty, equip it automatically
+        if (SimpleInventory.Instance.HasItem("Gun") && !IsAnyWeaponActive())
         {
-            if (gunParent != null) gunParent.SetActive(true);
-            if (axeParent != null) axeParent.SetActive(false);
+            EquipGun();
+        }
+        else if (SimpleInventory.Instance.HasItem("Axe") && !IsAnyWeaponActive())
+        {
+            EquipAxe();
         }
     }
 
-    private void OnAxePickedUp()
+    // --- MAIN LOGIC ---
+
+    public void ToggleWeapon(string weaponName)
     {
-        if (FixedInventory.Instance.HasAxe)
+        // 1. Do we even own this item?
+        if (!SimpleInventory.Instance.HasItem(weaponName)) return;
+
+        // 2. Logic to Switch
+        if (weaponName == "Gun")
         {
-            if (axeParent != null) axeParent.SetActive(true);
-            if (gunParent != null) gunParent.SetActive(false);
+            // If gun is already out, put it away. Otherwise, equip it.
+            if (gunParent.activeSelf) HideAllWeapons();
+            else EquipGun();
+        }
+        else if (weaponName == "Axe")
+        {
+            // If axe is already out, put it away. Otherwise, equip it.
+            if (axeParent.activeSelf) HideAllWeapons();
+            else EquipAxe();
         }
     }
 
-    private void ToggleGun()
+    private void EquipGun()
     {
-        if (FixedInventory.Instance.HasGun)
-        {
-            bool newState = !gunParent.activeSelf;
-            gunParent.SetActive(newState);
-
-            if (newState && axeParent != null) axeParent.SetActive(false);
-        }
+        if (gunParent != null) gunParent.SetActive(true);
+        if (axeParent != null) axeParent.SetActive(false);
     }
 
-    private void ToggleAxe()
+    private void EquipAxe()
     {
-        if (FixedInventory.Instance.HasAxe)
-        {
-            bool newState = !axeParent.activeSelf;
-            axeParent.SetActive(newState);
+        if (axeParent != null) axeParent.SetActive(true);
+        if (gunParent != null) gunParent.SetActive(false);
+    }
 
-            if (newState && gunParent != null) gunParent.SetActive(false);
-        }
+    private void HideAllWeapons()
+    {
+        if (gunParent != null) gunParent.SetActive(false);
+        if (axeParent != null) axeParent.SetActive(false);
+    }
+
+    private bool IsAnyWeaponActive()
+    {
+        return (gunParent != null && gunParent.activeSelf) || 
+               (axeParent != null && axeParent.activeSelf);
     }
 }
