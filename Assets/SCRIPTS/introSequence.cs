@@ -74,5 +74,10 @@ public class IntroSequence : MonoBehaviour
         if (mouseLookScript != null) mouseLookScript.enabled = true;
         
         if (blackScreen != null) blackScreen.gameObject.SetActive(false);
+
+        if (ObjectiveManager.Instance != null)
+        {
+            ObjectiveManager.Instance.StartGameLoop();
+        }
     }
 }

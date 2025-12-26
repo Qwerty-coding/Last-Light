@@ -41,10 +41,37 @@ public class ItemPickup : MonoBehaviour
         {
             bool itemPickedUp = false;
 
-            if (isGun) { inventory.GiveGun(); itemPickedUp = true; }
-            else if (isAxe) { inventory.GiveAxe(); itemPickedUp = true; }
-            else if (isKey) { inventory.GiveKey(); itemPickedUp = true; }
-            else if (woodAmount > 0) { inventory.AddLogs(woodAmount); itemPickedUp = true; }
+            if (isGun) 
+            { 
+                inventory.GiveGun(); 
+                itemPickedUp = true; 
+                
+                // UPDATE: Found Gun -> Go to Tower
+                ObjectiveManager.Instance.UpdateObjective("Reach the Fire Tower");
+            }
+            else if (isAxe) 
+            { 
+                inventory.GiveAxe(); 
+                itemPickedUp = true; 
+                
+                // UPDATE: Found Axe -> Chop Trees
+                ObjectiveManager.Instance.UpdateObjective("Gather Wood (0/10)");
+            }
+            else if (isKey) 
+            { 
+                inventory.GiveKey(); 
+                itemPickedUp = true; 
+            }
+            else if (woodAmount > 0) 
+            { 
+                inventory.AddLogs(woodAmount); 
+                itemPickedUp = true; 
+                
+                // UPDATE: Add to wood counter
+                // Loop in case pickup is a stack of wood
+                for(int i=0; i < woodAmount; i++) 
+                    ObjectiveManager.Instance.AddWood();
+            }
 
             if (itemPickedUp)
             {
