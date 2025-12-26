@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI; // Required for UI elements
+using UnityEngine.UI; 
 
 public class GameManagerScript : MonoBehaviour
 {
@@ -8,7 +8,7 @@ public class GameManagerScript : MonoBehaviour
     public GameObject gameOverUI;           // Your Game Over Screen
     public GameObject ammoUI;               // Your "0/0" text
     public CanvasGroup gameOverCanvasGroup; // The Canvas Group on the Game Over Screen
-    public CanvasGroup transitionOverlay;   // <--- NEW: The Black Panel (TransitionPanel)
+    public CanvasGroup transitionOverlay;   // The Black Panel (TransitionPanel)
 
     void Start()
     {
@@ -58,19 +58,30 @@ public class GameManagerScript : MonoBehaviour
 
     public void RestartGame()
     {
+        // 1. Reset Time
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
-        if (FixedInventory.Instance != null)
+        // 2. Wipe the Inventory (Destroy it so a new empty one is created)
+        if (SimpleInventory.Instance != null)
         {
-            FixedInventory.Instance.ResetInventory();
+            Destroy(SimpleInventory.Instance.gameObject);
         }
+
+        // 3. Reload Scene
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void LoadMainMenu()
     {
         Time.timeScale = 1f; // Must unpause to let animation play
-        StartCoroutine(FadeOutAndLoad()); // <--- NEW: Calls the black fade routine
+        
+        // Wipe Inventory when going to menu too
+        if (SimpleInventory.Instance != null)
+        {
+            Destroy(SimpleInventory.Instance.gameObject);
+        }
+
+        StartCoroutine(FadeOutAndLoad()); 
     }
 
     // ANIMATION 1: Game Over Pop-Up (Zoom + Fade In)
