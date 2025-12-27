@@ -31,37 +31,38 @@ public class SelectionManager : MonoBehaviour
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
 
-        // Limit the ray distance (e.g., 5 meters) so you can't select items from across the room
+        // Limit the ray distance (e.g., 5 meters)
         if (Physics.Raycast(ray, out hit, 5f))
         {
-            // 1. Check for Items (Using the NEW script)
-            UniversalPickup itemScript = hit.transform.GetComponentInParent<UniversalPickup>();
+            // --- THE FIX IS HERE ---
+            // We changed 'StoryPickup' to 'ItemPickup' to match the script on your Gun/Axe
+            ItemPickup itemScript = hit.transform.GetComponentInParent<ItemPickup>();
 
-            // 2. Check for Doors
+            // Check for Doors
             KeyDoorMech keyDoorScript = hit.transform.GetComponentInParent<KeyDoorMech>();
 
             if (itemScript != null)
             {
-                // REQUIRES: public bool isPlayerInRange in UniversalPickup.cs
+                // Logic: Must be looking at it (Raycast) AND standing close (Trigger)
                 if (itemScript.isPlayerInRange)
                 {
                     onTarget = true;
                     
-                    // Display the Item ID (e.g., "Gun", "Key")
+                    // Display the Item ID (e.g., "Gun")
                     if (interaction_text != null) interaction_text.text = itemScript.itemID;
                     
                     interaction_Info_UI.SetActive(true);
                 }
                 else
                 {
+                    // Looking at it, but too far away
                     onTarget = false;
                     interaction_Info_UI.SetActive(false);
                 }
             }
-            // 3. Check if we hit the KeyDoor
+            // Logic for Doors
             else if (keyDoorScript != null)
             {
-                // Optional: Check distance or range here if needed
                 onTarget = true;
 
                 if (interaction_text != null)
@@ -76,12 +77,14 @@ public class SelectionManager : MonoBehaviour
             }
             else
             {
+                // Looking at a wall or something else
                 onTarget = false;
                 interaction_Info_UI.SetActive(false);
             }
         }
         else
         {
+            // Raycast hit nothing (looking at sky)
             onTarget = false;
             interaction_Info_UI.SetActive(false);
         }

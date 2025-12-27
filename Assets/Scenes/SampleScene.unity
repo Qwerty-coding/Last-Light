@@ -1309,11 +1309,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Axe
-  isGun: 0
-  isAxe: 1
-  isKey: 0
-  woodAmount: 0
+  itemID: Axe
+  amount: 1
   isPlayerInRange: 0
 --- !u!1 &164134763
 GameObject:
@@ -1509,34 +1506,13 @@ PrefabInstance:
       addedObject: {fileID: 197747416}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4a4ec447d1d8b1a4289ec5242d2ab1ee, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 197747415}
+      addedObject: {fileID: 197747418}
   m_SourcePrefab: {fileID: 100100000, guid: 4a4ec447d1d8b1a4289ec5242d2ab1ee, type: 3}
 --- !u!1 &197747414 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4a4ec447d1d8b1a4289ec5242d2ab1ee, type: 3}
   m_PrefabInstance: {fileID: 197747413}
   m_PrefabAsset: {fileID: 0}
---- !u!65 &197747415
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 197747414}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 10, y: 10, z: 10}
-  m_Center: {x: 0, y: -0.0000000018626451, z: 0}
 --- !u!65 &197747416
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1570,12 +1546,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Key
-  isGun: 0
-  isAxe: 0
-  isKey: 1
-  woodAmount: 0
+  itemID: 
+  amount: 1
   isPlayerInRange: 0
+--- !u!65 &197747418
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197747414}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.004, y: 0.002, z: 0.004}
+  m_Center: {x: 0, y: -0.0000000018626451, z: 0}
 --- !u!1001 &219876979
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2763,11 +2757,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Gun
-  isGun: 1
-  isAxe: 0
-  isKey: 0
-  woodAmount: 0
+  itemID: Gun
+  amount: 1
   isPlayerInRange: 0
 --- !u!1 &336095037
 GameObject:
@@ -4507,6 +4498,57 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &708164674
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 708164675}
+  - component: {fileID: 708164676}
+  m_Layer: 0
+  m_Name: UI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &708164675
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708164674}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 26.633423, y: 411.12866, z: -386.0268}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1038318123}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &708164676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708164674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 696c4388aee43d74ea525652a898a629, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gunIcon: {fileID: 505734745}
+  axeIcon: {fileID: 1292041941}
+  keyIcon: {fileID: 907840785}
+  logIcon: {fileID: 1802497386}
+  logsText: {fileID: 1932565844}
+  lockedColor: {r: 0.2, g: 0.2, b: 0.2, a: 0.5}
+  unlockedColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &712747022 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4372550814043416, guid: 4d9135c56f306e14baa814f13d1a1193, type: 3}
@@ -6211,11 +6253,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &1005664369
 SphereCollider:
@@ -6362,11 +6401,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &1022584773
 SphereCollider:
@@ -6594,6 +6630,7 @@ RectTransform:
   - {fileID: 1901897612}
   - {fileID: 1942789953}
   - {fileID: 1757259431}
+  - {fileID: 708164675}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6731,6 +6768,7 @@ MonoBehaviour:
   closeRotation: {x: 0, y: 0, z: 0}
   rotSpeed: 2
   isLocked: 1
+  keyID: Key
 --- !u!65 &1058513284
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7048,11 +7086,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &1081178298
 SphereCollider:
@@ -8882,11 +8917,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &1261889812
 SphereCollider:
@@ -10507,11 +10539,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &1615585285
 SphereCollider:
@@ -12130,11 +12159,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &1924052355
 SphereCollider:
@@ -12821,8 +12847,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2004981612}
-  - component: {fileID: 2004981611}
-  - component: {fileID: 2004981610}
+  - component: {fileID: 2004981613}
   m_Layer: 0
   m_Name: GameManager3
   m_TagString: Untagged
@@ -12830,56 +12855,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2004981610
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2004981609}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6add970e36853f54f944881ec9297c4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hasGun: 0
-  hasAxe: 0
-  hasKey: 0
-  logsCount: 0
-  OnInventoryChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  OnGunChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  OnAxeChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  OnKeyChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLogsChanged:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &2004981611
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2004981609}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ca4f5b1757817141b11137baca40cf6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gunIcon: {fileID: 505734745}
-  axeIcon: {fileID: 1292041941}
-  keyIcon: {fileID: 907840785}
-  logIcon: {fileID: 1802497386}
-  logsCountText: {fileID: 1932565844}
-  lockedColor: {r: 0.2, g: 0.2, b: 0.2, a: 0.4}
-  unlockedColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &2004981612
 Transform:
   m_ObjectHideFlags: 0
@@ -12895,6 +12870,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2004981613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2004981609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7e28acab8d20954ab51eba7135614eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  debugItemList: []
+  OnInventoryChange:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &2009762858
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13096,11 +13087,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18b2c1c0b5cd89f479df1820859b0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Log
-  isGun: 0
-  isAxe: 0
-  isKey: 0
-  woodAmount: 1
+  itemID: Logs
+  amount: 1
   isPlayerInRange: 0
 --- !u!135 &2031374016
 SphereCollider:
