@@ -34,28 +34,65 @@ public class SelectionManager : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
+<<<<<<< Updated upstream
         if (Physics.Raycast(ray, out hit))
         {
             var selectionTransform = hit.transform;
 
             // CHANGED: Now looks for 'ItemPickup' instead of 'InteractableObject'
             ItemPickup itemScript = selectionTransform.GetComponent<ItemPickup>();
+=======
+        // Limit the ray distance (e.g., 5 meters)
+        if (Physics.Raycast(ray, out hit, 5f))
+        {
+            // --- THE FIX IS HERE ---
+            // We changed 'StoryPickup' to 'ItemPickup' to match the script on your Gun/Axe
+            ItemPickup itemScript = hit.transform.GetComponentInParent<ItemPickup>();
+
+            // Check for Doors
+            KeyDoorMech keyDoorScript = hit.transform.GetComponentInParent<KeyDoorMech>();
+>>>>>>> Stashed changes
 
             // Check if we hit an item AND the player is close enough to it
             if (itemScript != null && itemScript.isPlayerInRange)
             {
+<<<<<<< Updated upstream
+=======
+                // Logic: Must be looking at it (Raycast) AND standing close (Trigger)
+                if (itemScript.isPlayerInRange)
+                {
+                    onTarget = true;
+                    
+                    // Display the Item ID (e.g., "Gun")
+                    if (interaction_text != null) interaction_text.text = itemScript.itemID;
+                    
+                    interaction_Info_UI.SetActive(true);
+                }
+                else
+                {
+                    // Looking at it, but too far away
+                    onTarget = false;
+                    interaction_Info_UI.SetActive(false);
+                }
+            }
+            // Logic for Doors
+            else if (keyDoorScript != null)
+            {
+>>>>>>> Stashed changes
                 onTarget = true;
                 interaction_text.text = itemScript.itemName; // Get name from ItemPickup
                 interaction_Info_UI.SetActive(true);
             }
             else
             {
+                // Looking at a wall or something else
                 onTarget = false;
                 interaction_Info_UI.SetActive(false);
             }
         }
         else
         {
+            // Raycast hit nothing (looking at sky)
             onTarget = false;
             interaction_Info_UI.SetActive(false);
         }
