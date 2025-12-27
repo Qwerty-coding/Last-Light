@@ -6058,7 +6058,7 @@ MonoBehaviour:
   popupCanvasGroup: {fileID: 99846834}
   trackerText: {fileID: 812188336}
   trackerCanvasGroup: {fileID: 812188339}
-  popupDuration: 2
+  popupDuration: 1.5
   fadeSpeed: 2
   woodCollected: 0
   woodRequired: 10
