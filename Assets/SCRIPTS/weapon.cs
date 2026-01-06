@@ -10,7 +10,6 @@ using UnityEngine.EventSystems;
 public class weapon : MonoBehaviour
 {
     // public Camera playerCamera;
-
     public bool isShooting;
     public bool readyToShoot = true;
     private bool allowReset = true;
