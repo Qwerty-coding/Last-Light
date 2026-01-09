@@ -1,5 +1,6 @@
 using UnityEngine;
-using UnityEngine.UI; // Required for Image and Text
+using UnityEngine.UI;
+using System.Collections;
 
 public class SimpleInventoryUI : MonoBehaviour
 {
@@ -7,49 +8,126 @@ public class SimpleInventoryUI : MonoBehaviour
     public Image gunIcon;
     public Image axeIcon;
     public Image keyIcon;
-    
-    [Header("Resource UI")]
-    public Image logIcon;  // <--- NEW: Slot for the Log Image
-    public Text logsText;  // <--- Slot for the Counter (e.g., "0")
 
-    [Header("Settings")]
-    public Color lockedColor = new Color(0.2f, 0.2f, 0.2f, 0.5f); // Dark
-    public Color unlockedColor = Color.white; // Bright
+    [Header("Resource UI")]
+    public Image logIcon;
+    public Text logsText;
+
+    [Header("Colors")]
+    public Color lockedColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+    public Color unlockedColor = Color.white;
+
+    [Header("Pop Animation")]
+    public float popScale = 1.25f;
+    public float popDuration = 0.12f;
+
+    // Cached states
+    private bool hadGun;
+    private bool hadAxe;
+    private bool hadKey;
+    private int lastLogCount;
 
     private void Start()
     {
         if (SimpleInventory.Instance != null)
         {
             SimpleInventory.Instance.OnInventoryChange.AddListener(RefreshUI);
-            RefreshUI(); 
+            RefreshUI();
         }
     }
 
     public void RefreshUI()
     {
-        // 1. Check Weapons
-        if(gunIcon != null) 
-            gunIcon.color = SimpleInventory.Instance.HasItem("Gun") ? unlockedColor : lockedColor;
+        // ---------- GUN ----------
+        bool hasGun = SimpleInventory.Instance.HasItem("Gun");
+        UpdateIcon(gunIcon, hasGun, ref hadGun);
 
-        if(axeIcon != null) 
-            axeIcon.color = SimpleInventory.Instance.HasItem("Axe") ? unlockedColor : lockedColor;
+        // ---------- AXE ----------
+        bool hasAxe = SimpleInventory.Instance.HasItem("Axe");
+        UpdateIcon(axeIcon, hasAxe, ref hadAxe);
 
-        if(keyIcon != null) 
-            keyIcon.color = SimpleInventory.Instance.HasItem("Key") ? unlockedColor : lockedColor;
+        // ---------- KEY ----------
+        bool hasKey = SimpleInventory.Instance.HasItem("Key");
+        UpdateIcon(keyIcon, hasKey, ref hadKey);
 
-        // 2. Check Logs (Icon AND Text)
-        int count = SimpleInventory.Instance.GetCount("Logs");
+        // ---------- LOGS ----------
+        int logCount = SimpleInventory.Instance.GetCount("Logs");
+        UpdateLogs(logCount);
+    }
 
-        // Logic: If we have logs, turn icon white. If 0, turn dark.
+    private void UpdateIcon(Image icon, bool hasItem, ref bool previousState)
+    {
+        if (icon == null)
+            return;
+
+        icon.color = hasItem ? unlockedColor : lockedColor;
+
+        // Pop ONLY when item is newly acquired
+        if (!previousState && hasItem)
+        {
+            StartCoroutine(Pop(icon.rectTransform));
+        }
+
+        previousState = hasItem;
+    }
+
+    private void UpdateLogs(int count)
+    {
+        bool hasLogs = count > 0;
+
         if (logIcon != null)
+            logIcon.color = hasLogs ? unlockedColor : lockedColor;
+
+        if (logsText == null)
+            return;
+
+        // Hide text if zero
+        if (!hasLogs)
         {
-            logIcon.color = count > 0 ? unlockedColor : lockedColor;
+            logsText.text = "";
+            lastLogCount = 0;
+            return;
         }
 
-        // Logic: Update the number text
-        if (logsText != null)
+        // Update number
+        logsText.text = count.ToString();
+        logsText.color = unlockedColor;
+
+        // Pop EVERY time log count increases
+        if (count > lastLogCount)
         {
-            logsText.text = count.ToString(); // Just shows the number "0", "1", "5"
+            StartCoroutine(Pop(logsText.rectTransform));
+            StartCoroutine(Pop(logIcon.rectTransform));
         }
+
+        lastLogCount = count;
+    }
+
+    private IEnumerator Pop(RectTransform target)
+    {
+        Vector3 originalScale = Vector3.one;
+        Vector3 targetScale = Vector3.one * popScale;
+
+        float t = 0f;
+
+        // Scale up
+        while (t < popDuration)
+        {
+            t += Time.deltaTime;
+            target.localScale = Vector3.Lerp(originalScale, targetScale, t / popDuration);
+            yield return null;
+        }
+
+        t = 0f;
+
+        // Scale back
+        while (t < popDuration)
+        {
+            t += Time.deltaTime;
+            target.localScale = Vector3.Lerp(targetScale, originalScale, t / popDuration);
+            yield return null;
+        }
+
+        target.localScale = originalScale;
     }
 }

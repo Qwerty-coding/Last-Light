@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // This line is REQUIRED to talk to the UI
+using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -8,63 +8,87 @@ public class PlayerHealth : MonoBehaviour
     public float currentHealth;
 
     [Header("UI Reference")]
-    // Drag your 'HealthBarFill' image here in the Inspector
-    public Image healthBarFill; 
+    public Image healthBarFill;
 
     [Header("Damage Effect")]
-public DamageEffect damageEffect;
+    public DamageEffect damageEffect;
 
-[Header("Game Manager Reference")]
-    public GameManagerScript gameManager; // <--- ADD THIS LINE
+    [Header("Game Manager Reference")]
+    public GameManagerScript gameManager;
+
+    // ---------------- REGENERATION ----------------
+    [Header("Health Regeneration")]
+    public bool enableRegen = true;
+    [Tooltip("Health restored per second")]
+    public float regenRate = 5f;
+    [Tooltip("Seconds to wait after taking damage before regen starts")]
+    public float regenDelay = 3f;
+    [Tooltip("Minimum health required to allow regen")]
+    public float minHealthForRegen = 1f;
+
+    private float lastDamageTime;
+    // ------------------------------------------------
 
     void Start()
     {
-        // Start with full health
         currentHealth = maxHealth;
         UpdateHealthUI();
     }
 
     void Update()
     {
-        // --- TEMPORARY TESTING CODE ---
-        // Press SPACEBAR to hurt yourself. Delete this later!
+        // TEMP TEST
         if (Input.GetKeyDown(KeyCode.N))
         {
             TakeDamage(10);
         }
-        // -----------------------------
+
+        HandleRegeneration();
     }
 
     public void TakeDamage(float damageAmount)
     {
-        currentHealth -= damageAmount; // Subtract damage
+        currentHealth -= damageAmount;
 
-        // Trigger the blood vignette
-if (damageEffect != null)
-{
-    damageEffect.ShowDamage();
-}
+        lastDamageTime = Time.time; // reset regen timer
 
-        // Prevent health from going below 0
-        if (currentHealth < 0)
+        if (damageEffect != null)
         {
-            currentHealth = 0;
+            damageEffect.ShowDamage();
         }
 
-        // Update the bar
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
         UpdateHealthUI();
 
-        // Check if dead
-        if (currentHealth <= 0)
+        if (currentHealth <= 0f)
         {
             Die();
         }
     }
 
+    void HandleRegeneration()
+    {
+        if (!enableRegen)
+            return;
+
+        if (currentHealth <= minHealthForRegen)
+            return;
+
+        if (currentHealth >= maxHealth)
+            return;
+
+        // Wait before regen starts
+        if (Time.time < lastDamageTime + regenDelay)
+            return;
+
+        currentHealth += regenRate * Time.deltaTime;
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+
+        UpdateHealthUI();
+    }
+
     void UpdateHealthUI()
     {
-        // This math converts health to a number between 0 and 1
-        // Example: 80 health / 100 max = 0.8 fill amount
         if (healthBarFill != null)
         {
             healthBarFill.fillAmount = currentHealth / maxHealth;
@@ -78,6 +102,5 @@ if (damageEffect != null)
         {
             gameManager.TriggerGameOver();
         }
-        // Later we will add: SceneManager.LoadScene("GameOver");
     }
 }
