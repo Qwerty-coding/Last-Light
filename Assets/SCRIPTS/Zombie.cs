@@ -18,17 +18,8 @@ public class Zombie : MonoBehaviour
         HP -= damageAmount;
         if (HP <= 0)
         {
-            int randomvalue = Random.Range(0,2);
-
-
-            if (randomvalue == 0)
-            {
-                animator.SetTrigger("DIE1");
-            }
-            else
-            {
-                animator.SetTrigger("DIE2");
-            }           
+            animator.SetTrigger("DEATH");
+            Destroy(gameObject);   
         }
         else
         {
