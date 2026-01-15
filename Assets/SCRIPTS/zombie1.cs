@@ -7,53 +7,51 @@ public class Zombie1 : MonoBehaviour
 {
     [Header("Zombie Health and Damage")]
     public float giveDamage = 10f;
+    public float health = 100f;
     
     [Header("Zombie Things")]
     public NavMeshAgent zombieAgent;
-    public Transform LookPoint;
+    public Transform playerTransform; 
     public Camera AttackingRaycastArea;
     public LayerMask PlayerLayer;
 
     [Header("Zombie Guarding Var")]
     public GameObject[] walkPoints;
     int currentZombiePosition = 0;
-    public float zombieSpeed = 2f; // Added default value
+    public float walkSpeed = 1.5f; 
     float walkingpointRadius = 2;
 
-    // Cached references
-    private Transform playerTransform;
-
     [Header("Zombie Attacking Var")]
-    public float timeBetweenAttacks = 1.5f; // Added default value
+    public float timeBetweenAttacks = 1.5f;
     bool alreadyAttacked;   
 
+    [Header("Zombie Animation")]
+    public Animator anim;
+
     [Header("Zombie mood/states")]
+    public float runSpeed = 4f; 
     public float visionRadius = 15f;
     public float attackingRadius = 2f;
-    public bool playerInvisionRadius;
-    public bool playerInattackingRadius;
-    
-    public float stopChasingRadius = 25f; // Distance to STOP chasing (Must be bigger!)
+    public float stopChasingRadius = 25f; 
 
-    // Add this private variable to remember what we were doing
     private bool isChasing = false;
+
     private void Awake()
     {
         zombieAgent = GetComponent<NavMeshAgent>();
         playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
     }
 
-      private void Update()
+    private void Update()
     {
-        // 1. Check if we are close enough to attack
-        bool playerInAttackingRadius = Physics.CheckSphere(transform.position, attackingRadius, PlayerLayer);
+        // 1. THE KILL-SWITCH: Check death at the VERY TOP of Update
+        if (health <= 0 || anim.GetBool("Died")) 
+        {
+            return; // Exit immediately so no other logic (rotation/attack) runs
+        }
 
-        // 2. Decide which detection radius to use
-        // If we are ALREADY chasing, use the larger 'stopChasingRadius' (harder to escape)
-        // If we are NOT chasing, use the smaller 'visionRadius' (harder to get noticed)
+        bool playerInAttackingRadius = Physics.CheckSphere(transform.position, attackingRadius, PlayerLayer);
         float currentDetectionRange = isChasing ? stopChasingRadius : visionRadius;
-        
-        // 3. Check for player presence using that dynamic range
         bool playerInDetectionRange = Physics.CheckSphere(transform.position, currentDetectionRange, PlayerLayer);
 
         if (playerInAttackingRadius)
@@ -62,105 +60,116 @@ public class Zombie1 : MonoBehaviour
         }
         else if (playerInDetectionRange)
         {
-            // Player is found (or still being chased)
             isChasing = true;
             Chase();
         }
         else
         {
-            // Player has escaped the larger radius completely
             isChasing = false;
             Guard();
         }
     }
 
-
     private void Guard()
     {
-        if (walkPoints == null || walkPoints.Length == 0) return;
+        zombieAgent.isStopped = false;
+        zombieAgent.speed = walkSpeed; 
+        zombieAgent.SetDestination(walkPoints[currentZombiePosition].transform.position);
 
-        // MOVEMENT
-        if (zombieAgent != null && zombieAgent.isOnNavMesh)
-        {
-            zombieAgent.isStopped = false;
-            zombieAgent.speed = zombieSpeed;
-            zombieAgent.SetDestination(walkPoints[currentZombiePosition].transform.position);
-        }
-        else
-        {
-            // Fallback if no NavMesh
-            transform.position = Vector3.MoveTowards(transform.position, walkPoints[currentZombiePosition].transform.position, Time.deltaTime * zombieSpeed);
-        }
-
-        // CHECK DISTANCE
-        // Use Vector3.Distance to ignore height differences (optional, but safer)
         if (Vector3.Distance(transform.position, walkPoints[currentZombiePosition].transform.position) <= walkingpointRadius)
         {
-            // RANDOM PATROL (Matches your image snippet)
-            int previousPos = currentZombiePosition;
-            // Loop until we get a new position so he doesn't go to the same spot twice
-            while(currentZombiePosition == previousPos && walkPoints.Length > 1) {
-                currentZombiePosition = Random.Range(0, walkPoints.Length);
-            }
+            currentZombiePosition = Random.Range(0, walkPoints.Length);
         }
-        
-        // NOTE: I removed transform.LookAt() here to prevent jitter. 
-        // NavMeshAgent handles rotation automatically while moving.
+
+        anim.SetBool("Walking", true);
+        anim.SetBool("Running", false);
+        anim.SetBool("Attacking", false);
     }
 
     private void Chase()
     {
-        if (playerTransform == null) return;
+        zombieAgent.isStopped = false;
+        zombieAgent.speed = runSpeed; 
+        zombieAgent.SetDestination(playerTransform.position);
 
-        if (zombieAgent != null && zombieAgent.isOnNavMesh)
-        {
-            zombieAgent.isStopped = false;
-            zombieAgent.speed = zombieSpeed * 2; // Optional: Run faster when chasing?
-            zombieAgent.SetDestination(playerTransform.position);
-        }
+        anim.SetBool("Walking", false);
+        anim.SetBool("Running", true);
+        anim.SetBool("Attacking", false);
     }
 
     private void Attack()
     {
-        if (zombieAgent != null) zombieAgent.isStopped = true; // Stop moving
+        zombieAgent.isStopped = true; 
+        zombieAgent.speed = 0;
 
-        // Look at player (keep this, it's good for attacking)
+        // Only rotate if alive
         if (playerTransform != null)
         {
-            // Lock rotation to Y axis only so zombie doesn't tilt up/down
             Vector3 targetPostition = new Vector3(playerTransform.position.x, this.transform.position.y, playerTransform.position.z);
             this.transform.LookAt(targetPostition);
         }
 
         if (!alreadyAttacked)
         {
+            anim.SetBool("Attacking", true);
+            anim.SetBool("Walking", false);
+            anim.SetBool("Running", false);
+
             RaycastHit hit;
-            // Aim at Player's Chest (Position + Up Vector) rather than feet
-            Vector3 targetPoint = playerTransform != null ? playerTransform.position + Vector3.up * 1.5f : transform.forward;
-            
             Vector3 origin = AttackingRaycastArea != null ? AttackingRaycastArea.transform.position : transform.position + Vector3.up;
-            Vector3 dir = (targetPoint - origin).normalized;
-
-            // Draw ray in editor to debug
-            Debug.DrawRay(origin, dir * attackingRadius, Color.red, 1f);
-
-            if (Physics.Raycast(origin, dir, out hit, attackingRadius, PlayerLayer))
+            if (Physics.Raycast(origin, transform.forward, out hit, attackingRadius, PlayerLayer))
             {
-                Debug.Log("Zombie Hit: " + hit.collider.name);
-                // Try-Catch or Null check for component
-                var playerHealth = hit.collider.GetComponent<PlayerHealth>();
-                if(playerHealth != null)
-                {
-                    playerHealth.TakeDamage(giveDamage);
-                }
+                // Ensure PlayerHealth script exists on your player
+                var pHealth = hit.collider.GetComponent<PlayerHealth>();
+                if(pHealth != null) pHealth.TakeDamage(giveDamage);
             }
+
             alreadyAttacked = true;
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
         }
     }
 
+    public void TakeDamage(float damage)
+    {
+        if (health <= 0) return;
+
+        health -= damage;
+        
+        if (health <= 0)
+        {
+            Die(); // Use a centralized Die function
+        }
+    }
+
+    public void Die()
+    {
+        // Set animation triggers
+        anim.SetBool("Died", true);
+        anim.SetBool("Walking", false);
+        anim.SetBool("Running", false);
+        anim.SetBool("Attacking", false);
+
+        // Stop movement and disable AI
+        zombieAgent.isStopped = true; 
+        zombieAgent.enabled = false; 
+
+        // Stop all pending attacks
+        CancelInvoke(nameof(ResetAttack));
+
+        // Disable the collider so the player can walk over the body
+        CapsuleCollider capsule = GetComponent<CapsuleCollider>();
+        if (capsule != null) capsule.enabled = false;
+
+        // Cleanup body
+        Destroy(gameObject, 5f);
+
+        // Disable this script so Update() stops running forever
+        this.enabled = false; 
+    }
+
     private void ResetAttack()
     {
         alreadyAttacked = false;
+        anim.SetBool("Attacking", false);
     }
 }
