@@ -5,6 +5,10 @@ using UnityEngine.AI;
 
 public class Zombie : MonoBehaviour
 {
+
+    [Header("Zombie Animation")]
+    public Animator anim; // <--- ADD THIS LINE
+    
     [SerializeField] private int HP = 100;
     private Animator animator;
     private NavMeshAgent navAgent;
@@ -18,6 +22,10 @@ public class Zombie : MonoBehaviour
         HP -= damageAmount;
         if (HP <= 0)
         {
+            anim.SetBool("Walking", false);
+            anim.SetBool("Running", false);
+            anim.SetBool("Attacking", false);
+            anim.SetBool("Died", true);
             animator.SetTrigger("DEATH");
             Destroy(gameObject);   
         }
