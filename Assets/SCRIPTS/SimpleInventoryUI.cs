@@ -13,10 +13,6 @@ public class SimpleInventoryUI : MonoBehaviour
     public Image logIcon;
     public Text logsText;
 
-    [Header("Colors")]
-    public Color lockedColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-    public Color unlockedColor = Color.white;
-
     [Header("Pop Animation")]
     public float popScale = 1.25f;
     public float popDuration = 0.12f;
@@ -57,14 +53,17 @@ public class SimpleInventoryUI : MonoBehaviour
 
     private void UpdateIcon(Image icon, bool hasItem, ref bool previousState)
     {
-        if (icon == null)
-            return;
+        if (icon == null) return;
 
-        icon.color = hasItem ? unlockedColor : lockedColor;
+        // 1. SET ALPHA: 1 if we have it, 0 if we don't
+        Color c = icon.color;
+        c.a = hasItem ? 1f : 0f;
+        icon.color = c;
 
-        // Pop ONLY when item is newly acquired
+        // 2. POP ANIMATION
         if (!previousState && hasItem)
         {
+            icon.rectTransform.localScale = Vector3.one; 
             StartCoroutine(Pop(icon.rectTransform));
         }
 
@@ -75,29 +74,39 @@ public class SimpleInventoryUI : MonoBehaviour
     {
         bool hasLogs = count > 0;
 
+        // 1. LOG ICON ALPHA
         if (logIcon != null)
-            logIcon.color = hasLogs ? unlockedColor : lockedColor;
+        {
+            Color c = logIcon.color;
+            c.a = hasLogs ? 1f : 0f;
+            logIcon.color = c;
+        }
 
-        if (logsText == null)
-            return;
+        if (logsText == null) return;
 
-        // Hide text if zero
+        // 2. TEXT ALPHA & VALUE
         if (!hasLogs)
         {
-            logsText.text = "";
+            // Just make it invisible, no need to clear text string
+            Color tColor = logsText.color;
+            tColor.a = 0f;
+            logsText.color = tColor;
+            
             lastLogCount = 0;
             return;
         }
 
-        // Update number
+        // Show text
         logsText.text = count.ToString();
-        logsText.color = unlockedColor;
+        Color visibleColor = logsText.color;
+        visibleColor.a = 1f;
+        logsText.color = visibleColor;
 
-        // Pop EVERY time log count increases
+        // 3. POP ANIMATION
         if (count > lastLogCount)
         {
             StartCoroutine(Pop(logsText.rectTransform));
-            StartCoroutine(Pop(logIcon.rectTransform));
+            if (logIcon != null) StartCoroutine(Pop(logIcon.rectTransform));
         }
 
         lastLogCount = count;

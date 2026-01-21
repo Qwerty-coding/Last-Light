@@ -21,9 +21,11 @@ public class NPCShop : MonoBehaviour
     public string itemRewardName = "Gun";
     
     private bool hasAlreadyTraded = false;
-    private MouseMovement playerMouseScript;
 
-    // We store the actively running animation so we can stop it if the player clicks fast
+    // --- REFERENCES TO PLAYER SCRIPTS ---
+    private MouseMovement playerMouseScript;
+    private PlayerMovement playerMoveScript; // <--- NEW: Reference to movement
+
     private Coroutine currentMessageRoutine;
 
     void Start()
@@ -31,7 +33,9 @@ public class NPCShop : MonoBehaviour
         tradeButton.onClick.AddListener(TryTrade);
         closeButton.onClick.AddListener(CloseShop);
         
+        // Find both scripts automatically
         playerMouseScript = FindObjectOfType<MouseMovement>();
+        playerMoveScript = FindObjectOfType<PlayerMovement>(); // <--- NEW: Find the script
         
         if(notEnoughLogsUI != null) notEnoughLogsUI.SetActive(false);
         if(successUI != null) successUI.SetActive(false);
@@ -40,14 +44,20 @@ public class NPCShop : MonoBehaviour
     public void OpenShop()
     {
         tradeMenuUI.SetActive(true);
+        
+        // 1. UNLOCK CURSOR
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        // 2. STOP CAMERA ROTATION
         if (playerMouseScript != null) playerMouseScript.enabled = false;
+
+        // 3. STOP WASD MOVEMENT (Fixes your bug)
+        if (playerMoveScript != null) playerMoveScript.enabled = false; 
     }
 
     public void TryTrade()
     {
-        // Stop any message currently on screen so they don't overlap
         if (currentMessageRoutine != null) StopCoroutine(currentMessageRoutine);
 
         if (hasAlreadyTraded)
@@ -72,46 +82,35 @@ public class NPCShop : MonoBehaviour
         }
     }
 
-    // --- THE ANIMATION LOGIC ---
     IEnumerator AnimateMessage(GameObject messageObj)
     {
-        // 1. Setup
-        messageObj.SetActive(true); // Turn it on
+        messageObj.SetActive(true); 
         CanvasGroup group = messageObj.GetComponent<CanvasGroup>();
         RectTransform rect = messageObj.GetComponent<RectTransform>();
 
-        // Remember where the button is supposed to be (The center)
         Vector2 finalPosition = rect.anchoredPosition;
-        
-        // Move it 100 pixels to the LEFT for the start
         Vector2 startPosition = finalPosition + new Vector2(-100f, 0);
 
         float elapsedTime = 0f;
-        float animationDuration = 0.5f; // Animation takes 0.5 seconds
+        float animationDuration = 0.5f; 
 
-        // 2. The Animation Loop (Fade In + Slide Right)
+        // Animation Loop
         while (elapsedTime < animationDuration)
         {
             elapsedTime += Time.deltaTime;
-            float percentage = elapsedTime / animationDuration; // 0 to 1
+            float percentage = elapsedTime / animationDuration; 
 
-            // Smoothly move from Start to Final
             rect.anchoredPosition = Vector2.Lerp(startPosition, finalPosition, percentage);
-            
-            // Smoothly fade Alpha from 0 to 1
             if(group != null) group.alpha = Mathf.Lerp(0f, 1f, percentage);
 
-            yield return null; // Wait for next frame
+            yield return null; 
         }
 
-        // Ensure it ends exactly at the right spot/opacity
         rect.anchoredPosition = finalPosition;
         if(group != null) group.alpha = 1f;
 
-        // 3. Wait for 5 Seconds (as you requested)
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(5f); // 5 Second Timer
 
-        // 4. Turn it off
         messageObj.SetActive(false);
     }
 
@@ -122,8 +121,14 @@ public class NPCShop : MonoBehaviour
         if(successUI != null) successUI.SetActive(false);
         if(notEnoughLogsUI != null) notEnoughLogsUI.SetActive(false);
 
+        // 1. LOCK CURSOR
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // 2. RESUME CAMERA ROTATION
         if (playerMouseScript != null) playerMouseScript.enabled = true;
+
+        // 3. RESUME WASD MOVEMENT (Fixes your bug)
+        if (playerMoveScript != null) playerMoveScript.enabled = true;
     }
 }
