@@ -15,6 +15,8 @@ public class ItemPickup : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
+            if (SelectionManager.instance == null) return;
+
             if (isPlayerInRange && SelectionManager.instance.onTarget) 
             {
                 if(SelectionManager.instance.interaction_Info_UI.activeSelf) 
@@ -29,11 +31,11 @@ public class ItemPickup : MonoBehaviour
     {
         if (wasCollected) return;
 
-        SimpleInventory inventory = SimpleInventory.Instance;
-
-        if (inventory != null)
+        if (SimpleInventory.Instance != null)
         {
-            inventory.AddItem(itemID, amount);
+            // 1. Add item (This automatically alerts the ZombieSpawner)
+            SimpleInventory.Instance.AddItem(itemID, amount);
+            
             CheckStoryTriggers();
             wasCollected = true;
             
@@ -55,36 +57,19 @@ public class ItemPickup : MonoBehaviour
         {
             case "Gun":
                 ObjectiveManager.Instance.UpdateObjective("Reach the Fire Tower");
-                
-                // --- NEW CODE TO START SPAWNER ---
-                // This searches the scene for your Enemy spawner's script
-                ZombieSpawner spawner = Object.FindFirstObjectByType<ZombieSpawner>();
-                if (spawner != null)
-                {
-                    spawner.StartSpawning();
-                }
-                // ---------------------------------
                 break;
-
             case "Axe":
                 ObjectiveManager.Instance.UpdateObjective("Gather Wood (0/10)");
                 break;
-
             case "Logs":
-                for (int i = 0; i < amount; i++)
-                {
-                    ObjectiveManager.Instance.AddWood();
-                }
+                for (int i = 0; i < amount; i++) ObjectiveManager.Instance.AddWood();
                 break;
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) 
-        {
-            isPlayerInRange = true;
-        }
+        if (other.CompareTag("Player")) isPlayerInRange = true;
     }
 
     private void OnTriggerExit(Collider other)
