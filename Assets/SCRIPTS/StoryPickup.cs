@@ -3,16 +3,14 @@ using UnityEngine;
 public class StoryPickup : MonoBehaviour
 {
     [Header("Settings")]
-    // IMPORANT: Case Sensitive! Must match SimpleInventoryUI checks ("Gun", "Axe", "Key", "Logs")
-    public string itemID = "Gun"; 
+    public string itemID = "Axe";
     public int amount = 1;
 
-    [Header("Debug")]
+    [Header("Detection")]
     public bool isPlayerInRange;
 
     private void Update()
     {
-        // 1. Check if player is close and presses E
         if (isPlayerInRange && Input.GetKeyDown(KeyCode.E))
         {
             Collect();
@@ -21,69 +19,54 @@ public class StoryPickup : MonoBehaviour
 
     private void Collect()
     {
-        // --- 1. ADD TO INVENTORY (The Data) ---
+        Debug.Log($"[StoryPickup] Player picked up: {itemID}");
+
         if (SimpleInventory.Instance != null)
         {
             SimpleInventory.Instance.AddItem(itemID, amount);
         }
-        else
-        {
-            Debug.LogError("SimpleInventory is missing from the scene!");
-            return;
-        }
 
-        // --- 2. UPDATE OBJECTIVES (The Story) ---
         if (ObjectiveManager.Instance != null)
         {
-            CheckStoryTriggers();
+            HandleObjective();
+        }
+        else
+        {
+            Debug.LogError("[StoryPickup] ObjectiveManager.Instance is NULL!");
         }
 
-        // --- 3. CLEANUP ---
-        // Hide the item so it looks picked up
         gameObject.SetActive(false);
-        // Or use Destroy(gameObject); if you prefer
     }
 
-    private void CheckStoryTriggers()
+    private void HandleObjective()
     {
-        // This is the specific logic connecting Items to Objectives
-        
         switch (itemID)
         {
-            case "Gun":
-                // Found Gun -> Go to Tower
-                ObjectiveManager.Instance.UpdateObjective("Reach the Fire Tower");
-                break;
-
             case "Axe":
-                // Found Axe -> Go chop wood
-                ObjectiveManager.Instance.UpdateObjective("Gather Wood (0/10)");
+                // Axe unlocks the wood objective
+                ObjectiveManager.Instance.StartWoodObjective();
                 break;
 
             case "Logs":
-                // Found Wood -> Update the specific wood counter
-                // We loop this just in case you pick up a stack of 3 logs at once
-                for (int i = 0; i < amount; i++)
-                {
-                    ObjectiveManager.Instance.AddWood();
-                }
+                // Each log adds +1 wood
+                ObjectiveManager.Instance.AddWood();
                 break;
-                
-            case "Key":
-                // Keys might not update an objective, but you can add logic here if they do!
-                Debug.Log("Key collected - no objective update needed.");
+
+            case "Gun":
+                ObjectiveManager.Instance.UpdateObjective("Kill 3 Zombies to get the Key");
                 break;
         }
     }
 
-    // --- TRIGGER LOGIC ---
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) isPlayerInRange = true;
+        if (other.CompareTag("Player"))
+            isPlayerInRange = true;
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player")) isPlayerInRange = false;
+        if (other.CompareTag("Player"))
+            isPlayerInRange = false;
     }
 }

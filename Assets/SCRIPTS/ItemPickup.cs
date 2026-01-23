@@ -15,27 +15,13 @@ public class ItemPickup : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("[ItemPickup] E pressed");
-
-            if (SelectionManager.instance == null)
-            {
-                Debug.LogWarning("[ItemPickup] SelectionManager is NULL");
-                return;
-            }
-
-            Debug.Log("[ItemPickup] Player in range: " + isPlayerInRange);
-            Debug.Log("[ItemPickup] On target: " + SelectionManager.instance.onTarget);
+            if (SelectionManager.instance == null) return;
 
             if (isPlayerInRange && SelectionManager.instance.onTarget)
             {
                 if (SelectionManager.instance.interaction_Info_UI.activeSelf)
                 {
-                    Debug.Log("[ItemPickup] Conditions met → Collecting item");
                     CollectItem();
-                }
-                else
-                {
-                    Debug.LogWarning("[ItemPickup] Interaction UI not active");
                 }
             }
         }
@@ -43,16 +29,10 @@ public class ItemPickup : MonoBehaviour
 
     private void CollectItem()
     {
-        if (wasCollected)
-        {
-            Debug.LogWarning("[ItemPickup] Item already collected");
-            return;
-        }
+        if (wasCollected) return;
 
         if (SimpleInventory.Instance != null)
         {
-            Debug.Log("[ItemPickup] Adding item to inventory: " + itemID);
-
             SimpleInventory.Instance.AddItem(itemID, amount);
             CheckStoryTriggers();
 
@@ -64,20 +44,13 @@ public class ItemPickup : MonoBehaviour
                 SelectionManager.instance.interaction_Info_UI.SetActive(false);
             }
 
-            Debug.Log("[ItemPickup] Destroying pickup object");
             Destroy(gameObject);
-        }
-        else
-        {
-            Debug.LogError("[ItemPickup] SimpleInventory instance is NULL");
         }
     }
 
     private void CheckStoryTriggers()
     {
         if (ObjectiveManager.Instance == null) return;
-
-        Debug.Log("[ItemPickup] Checking story trigger for: " + itemID);
 
         switch (itemID)
         {
@@ -101,7 +74,6 @@ public class ItemPickup : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             isPlayerInRange = true;
-            Debug.Log("[ItemPickup] Player entered pickup range");
         }
     }
 
@@ -110,7 +82,6 @@ public class ItemPickup : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             isPlayerInRange = false;
-            Debug.Log("[ItemPickup] Player left pickup range");
         }
     }
 }
