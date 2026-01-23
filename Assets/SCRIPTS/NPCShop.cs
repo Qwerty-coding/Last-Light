@@ -8,8 +8,8 @@ public class NPCShop : MonoBehaviour
     public GameObject tradeMenuUI; 
 
     [Header("Buttons")]
-    public Button tradeButton;     
-    public Button closeButton;     
+    public Button tradeButton;      
+    public Button closeButton;      
     
     [Header("Pop-up Messages")]
     public GameObject notEnoughLogsUI; 
@@ -22,9 +22,8 @@ public class NPCShop : MonoBehaviour
     
     private bool hasAlreadyTraded = false;
 
-    // --- REFERENCES TO PLAYER SCRIPTS ---
     private MouseMovement playerMouseScript;
-    private PlayerMovement playerMoveScript; // <--- NEW: Reference to movement
+    private PlayerMovement playerMoveScript; 
 
     private Coroutine currentMessageRoutine;
 
@@ -33,9 +32,8 @@ public class NPCShop : MonoBehaviour
         tradeButton.onClick.AddListener(TryTrade);
         closeButton.onClick.AddListener(CloseShop);
         
-        // Find both scripts automatically
         playerMouseScript = FindObjectOfType<MouseMovement>();
-        playerMoveScript = FindObjectOfType<PlayerMovement>(); // <--- NEW: Find the script
+        playerMoveScript = FindObjectOfType<PlayerMovement>(); 
         
         if(notEnoughLogsUI != null) notEnoughLogsUI.SetActive(false);
         if(successUI != null) successUI.SetActive(false);
@@ -44,15 +42,10 @@ public class NPCShop : MonoBehaviour
     public void OpenShop()
     {
         tradeMenuUI.SetActive(true);
-        
-        // 1. UNLOCK CURSOR
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // 2. STOP CAMERA ROTATION
         if (playerMouseScript != null) playerMouseScript.enabled = false;
-
-        // 3. STOP WASD MOVEMENT (Fixes your bug)
         if (playerMoveScript != null) playerMoveScript.enabled = false; 
     }
 
@@ -68,16 +61,22 @@ public class NPCShop : MonoBehaviour
 
         if (SimpleInventory.Instance.GetCount(itemCostName) >= costAmount)
         {
-            // SUCCESS
+            // Successful Trade
             SimpleInventory.Instance.RemoveItem(itemCostName, costAmount);
             SimpleInventory.Instance.AddItem(itemRewardName, 1);
             
             hasAlreadyTraded = true; 
+            
+            // Tell ObjectiveManager to start the Zombie Hunt phase
+            if (ObjectiveManager.Instance != null)
+            {
+                ObjectiveManager.Instance.UpdateObjective("Kill 3 Zombies to get the Key");
+            }
+
             currentMessageRoutine = StartCoroutine(AnimateMessage(successUI));
         }
         else
         {
-            // FAIL
             currentMessageRoutine = StartCoroutine(AnimateMessage(notEnoughLogsUI));
         }
     }
@@ -86,49 +85,17 @@ public class NPCShop : MonoBehaviour
     {
         messageObj.SetActive(true); 
         CanvasGroup group = messageObj.GetComponent<CanvasGroup>();
-        RectTransform rect = messageObj.GetComponent<RectTransform>();
-
-        Vector2 finalPosition = rect.anchoredPosition;
-        Vector2 startPosition = finalPosition + new Vector2(-100f, 0);
-
-        float elapsedTime = 0f;
-        float animationDuration = 0.5f; 
-
-        // Animation Loop
-        while (elapsedTime < animationDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            float percentage = elapsedTime / animationDuration; 
-
-            rect.anchoredPosition = Vector2.Lerp(startPosition, finalPosition, percentage);
-            if(group != null) group.alpha = Mathf.Lerp(0f, 1f, percentage);
-
-            yield return null; 
-        }
-
-        rect.anchoredPosition = finalPosition;
-        if(group != null) group.alpha = 1f;
-
-        yield return new WaitForSeconds(5f); // 5 Second Timer
-
+        yield return new WaitForSeconds(3f);
         messageObj.SetActive(false);
     }
 
     public void CloseShop()
     {
         tradeMenuUI.SetActive(false);
-        
-        if(successUI != null) successUI.SetActive(false);
-        if(notEnoughLogsUI != null) notEnoughLogsUI.SetActive(false);
-
-        // 1. LOCK CURSOR
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // 2. RESUME CAMERA ROTATION
         if (playerMouseScript != null) playerMouseScript.enabled = true;
-
-        // 3. RESUME WASD MOVEMENT (Fixes your bug)
         if (playerMoveScript != null) playerMoveScript.enabled = true;
     }
 }

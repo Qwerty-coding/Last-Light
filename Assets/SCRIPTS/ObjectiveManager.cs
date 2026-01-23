@@ -7,97 +7,92 @@ public class ObjectiveManager : MonoBehaviour
     public static ObjectiveManager Instance;
 
     [Header("UI References")]
-    public TextMeshProUGUI popupText;       // Drag "Msg_Popup" here
-    public CanvasGroup popupCanvasGroup;    // Drag "Msg_Popup" here
-    public TextMeshProUGUI trackerText;     // Drag "Msg_Tracker" here
-    public CanvasGroup trackerCanvasGroup;  // Drag "Msg_Tracker" here
+    public TextMeshProUGUI trackerText;
+    public CanvasGroup trackerCanvasGroup;
 
     [Header("Settings")]
-    public float popupDuration = 2.0f;
-    public float fadeSpeed = 2.0f;
+    public int woodRequired = 10;   // 🔥 CHANGED FROM 5 → 10
+    public int zombiesRequired = 3;
 
-    [Header("Game State")]
-    public int woodCollected = 0;
-    public int woodRequired = 10;
-
-    private bool isGameStarted = false; // Prevents objectives during wakeup
+    private int currentWood = 0;
+    private int zombiesKilled = 0;
 
     void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        // Ensure Popup is invisible at start
-        if(popupCanvasGroup != null) popupCanvasGroup.alpha = 0;
-        
-        // Ensure Tracker is empty at start
-        if(trackerText != null) trackerText.text = "";
+        if (trackerText != null)
+            trackerText.text = "";
     }
 
-    // --- STEP 1: Call this when Wakeup Animation Finishes ---
+    // Needed by IntroSequence (DO NOT REMOVE)
     public void StartGameLoop()
     {
-        isGameStarted = true;
-        // Phase 1, Step 4: Look around for weapon
-        UpdateObjective("Look around for a weapon");
+        UpdateObjective("Exit the house from the main gate");
     }
 
-    // --- Main Function to Change Objectives ---
-    public void UpdateObjective(string newObjectiveDescription)
+    // 🔥 FORCE correct wood UI (kills 0/5 & 0/10 bugs)
+    public void ForceWoodObjectiveUI()
     {
-        if (!isGameStarted) return;
+        if (trackerText == null) return;
 
-        StartCoroutine(ShowObjectiveSequence(newObjectiveDescription));
+        trackerText.text = "- Gather Wood (0/" + woodRequired + ")";
     }
 
-    // Logic for Wood Gathering
+    // Called when Axe is picked up
+    public void StartWoodObjective()
+    {
+        currentWood = 0;
+        ForceWoodObjectiveUI();
+    }
+
+    // Called when a log is collected
     public void AddWood()
     {
-        if (!isGameStarted) return;
+        currentWood++;
 
-        woodCollected++;
-        
-        // Update ONLY the tracker text (no popup animation for counting)
-        if (woodCollected < woodRequired)
+        if (currentWood > woodRequired)
+            currentWood = woodRequired;
+
+        trackerText.text = "- Gather Wood (" + currentWood + "/" + woodRequired + ")";
+
+        if (currentWood >= woodRequired)
         {
-            trackerText.text = $"- Gather wood outside ({woodCollected}/{woodRequired})";
-        }
-        else if (woodCollected == woodRequired)
-        {
-            // Wood done, trigger major update to find Gun
-            UpdateObjective("Find the Gun at the Crash Site");
+            UpdateObjective("Trade logs with the NPC for a gun");
         }
     }
 
-    // --- Animation Logic ---
-    IEnumerator ShowObjectiveSequence(string newText)
+    public void OnZombieKilled()
     {
-        // 1. Show "OBJECTIVE UPDATED" Popup
-        yield return StartCoroutine(FadeCanvasGroup(popupCanvasGroup, 0, 1)); // Fade In
-        
-        // 2. Fade OUT old persistent text
-        yield return StartCoroutine(FadeCanvasGroup(trackerCanvasGroup, 1, 0));
+        zombiesKilled++;
 
-        // 3. Change the persistent text while it's invisible
-        trackerText.text = "- " + newText;
+        trackerText.text = "- Kill Zombies (" + zombiesKilled + "/" + zombiesRequired + ")";
 
-        // 4. Wait a moment for player to read popup
-        yield return new WaitForSeconds(popupDuration);
-
-        // 5. Fade OUT Popup & Fade IN new Persistent text
-        StartCoroutine(FadeCanvasGroup(popupCanvasGroup, 1, 0));
-        StartCoroutine(FadeCanvasGroup(trackerCanvasGroup, 0, 1));
+        if (zombiesKilled >= zombiesRequired)
+        {
+            SimpleInventory.Instance.AddItem("Key", 1);
+            UpdateObjective("Key Found! Unlock the Terrace Door");
+        }
     }
 
-    IEnumerator FadeCanvasGroup(CanvasGroup cg, float start, float end)
+    public void UpdateObjective(string newText)
     {
-        float counter = 0f;
-        while (counter < 1f)
+        StopAllCoroutines();
+        StartCoroutine(FadeObjective(newText));
+    }
+
+    IEnumerator FadeObjective(string text)
+    {
+        trackerCanvasGroup.alpha = 0;
+        trackerText.text = "- " + text;
+
+        float t = 0f;
+        while (t < 1f)
         {
-            counter += Time.deltaTime * fadeSpeed;
-            cg.alpha = Mathf.Lerp(start, end, counter);
+            t += Time.deltaTime;
+            trackerCanvasGroup.alpha = t;
             yield return null;
         }
-        cg.alpha = end;
     }
 }

@@ -35,6 +35,7 @@ public class Zombie1 : MonoBehaviour
     public float stopChasingRadius = 25f; 
 
     private bool isChasing = false;
+    private bool countedAsDead = false;   // 🔥 PREVENT DOUBLE COUNT
 
     private void Awake()
     {
@@ -44,10 +45,10 @@ public class Zombie1 : MonoBehaviour
 
     private void Update()
     {
-        // 1. THE KILL-SWITCH: Check death at the VERY TOP of Update
+        // Kill-switch
         if (health <= 0 || anim.GetBool("Died")) 
         {
-            return; // Exit immediately so no other logic (rotation/attack) runs
+            return;
         }
 
         bool playerInAttackingRadius = Physics.CheckSphere(transform.position, attackingRadius, PlayerLayer);
@@ -102,11 +103,14 @@ public class Zombie1 : MonoBehaviour
         zombieAgent.isStopped = true; 
         zombieAgent.speed = 0;
 
-        // Only rotate if alive
         if (playerTransform != null)
         {
-            Vector3 targetPostition = new Vector3(playerTransform.position.x, this.transform.position.y, playerTransform.position.z);
-            this.transform.LookAt(targetPostition);
+            Vector3 targetPostition = new Vector3(
+                playerTransform.position.x,
+                transform.position.y,
+                playerTransform.position.z
+            );
+            transform.LookAt(targetPostition);
         }
 
         if (!alreadyAttacked)
@@ -116,12 +120,15 @@ public class Zombie1 : MonoBehaviour
             anim.SetBool("Running", false);
 
             RaycastHit hit;
-            Vector3 origin = AttackingRaycastArea != null ? AttackingRaycastArea.transform.position : transform.position + Vector3.up;
+            Vector3 origin = AttackingRaycastArea != null
+                ? AttackingRaycastArea.transform.position
+                : transform.position + Vector3.up;
+
             if (Physics.Raycast(origin, transform.forward, out hit, attackingRadius, PlayerLayer))
             {
-                // Ensure PlayerHealth script exists on your player
                 var pHealth = hit.collider.GetComponent<PlayerHealth>();
-                if(pHealth != null) pHealth.TakeDamage(giveDamage);
+                if (pHealth != null)
+                    pHealth.TakeDamage(giveDamage);
             }
 
             alreadyAttacked = true;
@@ -134,37 +141,39 @@ public class Zombie1 : MonoBehaviour
         if (health <= 0) return;
 
         health -= damage;
-        
+
         if (health <= 0)
         {
-            Die(); // Use a centralized Die function
+            Die();
         }
     }
 
-    public void Die()
+    private void Die()
     {
-        // Set animation triggers
+        if (countedAsDead) return;
+        countedAsDead = true;
+
+        // 🔥 INFORM OBJECTIVE MANAGER
+        if (ObjectiveManager.Instance != null)
+        {
+            ObjectiveManager.Instance.OnZombieKilled();
+        }
+
         anim.SetBool("Died", true);
         anim.SetBool("Walking", false);
         anim.SetBool("Running", false);
         anim.SetBool("Attacking", false);
 
-        // Stop movement and disable AI
-        zombieAgent.isStopped = true; 
-        zombieAgent.enabled = false; 
+        zombieAgent.isStopped = true;
+        zombieAgent.enabled = false;
 
-        // Stop all pending attacks
         CancelInvoke(nameof(ResetAttack));
 
-        // Disable the collider so the player can walk over the body
         CapsuleCollider capsule = GetComponent<CapsuleCollider>();
         if (capsule != null) capsule.enabled = false;
 
-        // Cleanup body
         Destroy(gameObject, 5f);
-
-        // Disable this script so Update() stops running forever
-        this.enabled = false; 
+        this.enabled = false;
     }
 
     private void ResetAttack()
