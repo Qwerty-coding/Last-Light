@@ -3,7 +3,7 @@ using UnityEngine;
 public class ItemPickup : MonoBehaviour
 {
     [Header("Settings")]
-    public string itemID;
+    public string itemID;   // Make sure this matches ItemNames.LOGS exactly in Inspector!
     public int amount = 1;
 
     [Header("Debug View")]
@@ -11,18 +11,26 @@ public class ItemPickup : MonoBehaviour
 
     private bool wasCollected = false;
 
+    // FIX 1: Clean the ID as soon as the object loads
+    private void Awake()
+    {
+        if (!string.IsNullOrEmpty(itemID))
+        {
+            itemID = itemID.Trim(); // Removes accidental spaces like "Logs "
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            if (SelectionManager.instance == null) return;
-
-            if (isPlayerInRange && SelectionManager.instance.onTarget)
+            // Consolidate checks for cleaner reading
+            if (isPlayerInRange && 
+                SelectionManager.instance != null && 
+                SelectionManager.instance.onTarget && 
+                SelectionManager.instance.interaction_Info_UI.activeSelf)
             {
-                if (SelectionManager.instance.interaction_Info_UI.activeSelf)
-                {
-                    CollectItem();
-                }
+                CollectItem();
             }
         }
     }
@@ -30,58 +38,58 @@ public class ItemPickup : MonoBehaviour
     private void CollectItem()
     {
         if (wasCollected) return;
+        if (SimpleInventory.Instance == null) return;
 
-        if (SimpleInventory.Instance != null)
+        Debug.Log($"[ItemPickup] Collecting: '{itemID}' Amount: {amount}");
+
+        // ✅ ADD ITEM
+        SimpleInventory.Instance.AddItem(itemID, amount);
+
+        // ✅ CHECK TRIGGER MATCHING
+        // This ensures the logic fires even if there is a tiny casing mismatch
+        // assuming your ItemNames constants are standard
+        HandleObjectiveTrigger();
+
+        wasCollected = true;
+
+        if (SelectionManager.instance != null)
         {
-            SimpleInventory.Instance.AddItem(itemID, amount);
-            CheckStoryTriggers();
-
-            wasCollected = true;
-
-            if (SelectionManager.instance != null)
-            {
-                SelectionManager.instance.onTarget = false;
-                SelectionManager.instance.interaction_Info_UI.SetActive(false);
-            }
-
-            Destroy(gameObject);
+            SelectionManager.instance.onTarget = false;
+            SelectionManager.instance.interaction_Info_UI.SetActive(false);
         }
+
+        Destroy(gameObject);
     }
 
-    private void CheckStoryTriggers()
+    private void HandleObjectiveTrigger()
     {
         if (ObjectiveManager.Instance == null) return;
 
-        switch (itemID)
+        // Using simple string comparison for safety
+        if (itemID == ItemNames.GUN)
         {
-            case "Gun":
-                ObjectiveManager.Instance.UpdateObjective("Reach the Fire Tower");
-                break;
-
-            case "Axe":
-                ObjectiveManager.Instance.UpdateObjective("Gather Wood (0/10)");
-                break;
-
-            case "Logs":
-                for (int i = 0; i < amount; i++)
-                    ObjectiveManager.Instance.AddWood();
-                break;
+            ObjectiveManager.Instance.UpdateObjective("Reach the Fire Tower");
+        }
+        else if (itemID == ItemNames.AXE)
+        {
+            ObjectiveManager.Instance.StartWoodObjective();
+        }
+        else if (itemID == ItemNames.LOGS)
+        {
+            for (int i = 0; i < amount; i++)
+            {
+                ObjectiveManager.Instance.AddWood();
+            }
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInRange = true;
-        }
+        if (other.CompareTag("Player")) isPlayerInRange = true;
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInRange = false;
-        }
+        if (other.CompareTag("Player")) isPlayerInRange = false;
     }
 }
