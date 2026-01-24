@@ -3,52 +3,34 @@ using UnityEngine;
 public class ZombieSpawner : MonoBehaviour
 {
     [Header("Settings")]
-    public GameObject zombiePrefab;    // Drag your Zombie Prefab here
-    public float spawnInterval = 4f;   // Time between spawns (seconds)
-    
+    public GameObject zombiePrefab;    
+    public string zombieTag = "Zombie"; // Matches your tag from the screenshot
+    public float spawnInterval = 4f;   
+    public int maxZombies = 5;         // The cap you requested
+
     [Header("Spawn Radius")]
-    public float minDistance = 8f;     // Keep zombies from spawning on top of player
-    public float maxDistance = 20f;    // The furthest they can spawn
+    public float minDistance = 8f;     
+    public float maxDistance = 20f;    
 
     private bool isSpawning = false;
     private Transform playerTransform;
 
     private void Start()
     {
-        // 1. Find the player automatically by Tag "Player"
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-        {
-            playerTransform = playerObj.transform;
-        }
-        else
-        {
-            Debug.LogError("ZombieSpawner: Could not find object with tag 'Player'!");
-        }
+        if (playerObj != null) playerTransform = playerObj.transform;
 
-        // 2. Initial check in case player starts with a gun
         CheckForGun();
 
-        // 3. Listen for future inventory changes
         if (SimpleInventory.Instance != null)
         {
             SimpleInventory.Instance.OnInventoryChange.AddListener(CheckForGun);
         }
     }
 
-    private void OnDestroy()
-    {
-        // Unsubscribe to prevent errors
-        if (SimpleInventory.Instance != null)
-        {
-            SimpleInventory.Instance.OnInventoryChange.RemoveListener(CheckForGun);
-        }
-    }
-
-    // This method is called automatically whenever the Inventory updates
     private void CheckForGun()
     {
-        if (isSpawning) return; // Don't start twice
+        if (isSpawning) return; 
 
         if (SimpleInventory.Instance != null && SimpleInventory.Instance.HasItem("Gun"))
         {
@@ -59,7 +41,7 @@ public class ZombieSpawner : MonoBehaviour
     private void StartSpawning()
     {
         isSpawning = true;
-        Debug.Log("🧟 Gun detected! Starting zombie waves.");
+        // This starts a loop that runs every 4 seconds
         InvokeRepeating(nameof(SpawnAroundPlayer), 0f, spawnInterval);
     }
 
@@ -67,14 +49,20 @@ public class ZombieSpawner : MonoBehaviour
     {
         if (zombiePrefab == null || playerTransform == null) return;
 
-        // --- MATH: Create a random position in a ring around the player ---
+        // 1. Check how many zombies currently exist
+        int currentZombieCount = GameObject.FindGameObjectsWithTag(zombieTag).Length;
+
+        // 2. STOP if we are at or above the limit
+        if (currentZombieCount >= maxZombies)
+        {
+            Debug.Log("Limit reached. No spawn this time.");
+            return; // This line prevents spawning until a zombie is destroyed
+        }
+
+        // 3. Only runs if count is less than 5
         Vector2 randomDirection = Random.insideUnitCircle.normalized;
         float randomDistance = Random.Range(minDistance, maxDistance);
-
-        Vector3 spawnOffset = new Vector3(randomDirection.x, 0, randomDirection.y) * randomDistance;
-        Vector3 spawnPos = playerTransform.position + spawnOffset;
-
-        // Keep the spawn height at ground level
+        Vector3 spawnPos = playerTransform.position + new Vector3(randomDirection.x, 0, randomDirection.y) * randomDistance;
         spawnPos.y = playerTransform.position.y; 
 
         Instantiate(zombiePrefab, spawnPos, Quaternion.identity);
