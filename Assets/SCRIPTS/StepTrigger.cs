@@ -11,4 +11,4 @@ public class StepTrigger : MonoBehaviour
             Destroy(gameObject); // Remove the trigger so it only happens once
         }
     }
-}
+} 
