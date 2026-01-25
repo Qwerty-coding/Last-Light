@@ -3,7 +3,8 @@ using UnityEngine.SceneManagement;
 
 public class StoryTrigger : MonoBehaviour
 {
-    public enum TriggerType { TerraceDoor, Portal }
+    // Make sure to select 'FireTowerDoor' in the Inspector!
+    public enum TriggerType { FireTowerDoor, Portal }
     public TriggerType type;
 
     private void OnTriggerEnter(Collider other)
@@ -11,19 +12,25 @@ public class StoryTrigger : MonoBehaviour
         // Only respond to the Player
         if (other.CompareTag("Player"))
         {
-            if (type == TriggerType.TerraceDoor)
+            if (type == TriggerType.FireTowerDoor)
             {
                 // Check if the player has the key we gave them in ObjectiveManager
                 if (SimpleInventory.Instance != null && SimpleInventory.Instance.HasItem("Key"))
                 {
-                    ObjectiveManager.Instance.UpdateObjective("The Terrace is open! Enter the Portal.");
-                    // Optional: Deactivate a door visual or "Invisible Wall" here
+                    // 🔥 UPDATED TEXT HERE
+                    ObjectiveManager.Instance.UpdateObjective("Door Unlocked! Enter the Portal at the top.");
+                    
+                    // Deactivate the door/invisible wall
                     gameObject.SetActive(false); 
+                }
+                else
+                {
+                    Debug.Log("Player needs a Key to open the Fire Tower.");
                 }
             }
             else if (type == TriggerType.Portal)
             {
-                // Load your Boss Scene (Make sure it's in Build Settings!)
+                // Load your Boss Scene (Ensure 'BossScene' is in Build Settings)
                 SceneManager.LoadScene("BossScene"); 
             }
         }

@@ -6,12 +6,16 @@ public class ObjectiveManager : MonoBehaviour
 {
     public static ObjectiveManager Instance;
 
-    [Header("UI References")]
+    [Header("Tracker UI References")]
     public TextMeshProUGUI trackerText;
     public CanvasGroup trackerCanvasGroup;
 
+    [Header("Popup UI References")]
+    public CanvasGroup popupCanvasGroup; // Drag your 'ObjectivePopupText' object here
+    public float popupDuration = 2f;     // How long the popup stays visible
+
     [Header("Settings")]
-    public int woodRequired = 10;   // 🔥 CHANGED FROM 5 → 10
+    public int woodRequired = 10;
     public int zombiesRequired = 3;
 
     private int currentWood = 0;
@@ -24,30 +28,30 @@ public class ObjectiveManager : MonoBehaviour
 
         if (trackerText != null)
             trackerText.text = "";
+            
+        // Ensure popup is invisible at start
+        if (popupCanvasGroup != null)
+            popupCanvasGroup.alpha = 0;
     }
 
-    // Needed by IntroSequence (DO NOT REMOVE)
+    // Needed by IntroSequence
     public void StartGameLoop()
     {
         UpdateObjective("Exit the house from the main gate");
     }
 
-    // 🔥 FORCE correct wood UI (kills 0/5 & 0/10 bugs)
     public void ForceWoodObjectiveUI()
     {
         if (trackerText == null) return;
-
         trackerText.text = "- Gather Wood (0/" + woodRequired + ")";
     }
 
-    // Called when Axe is picked up
     public void StartWoodObjective()
     {
         currentWood = 0;
         ForceWoodObjectiveUI();
     }
 
-    // Called when a log is collected
     public void AddWood()
     {
         currentWood++;
@@ -71,16 +75,29 @@ public class ObjectiveManager : MonoBehaviour
 
         if (zombiesKilled >= zombiesRequired)
         {
-            SimpleInventory.Instance.AddItem("Key", 1);
-            UpdateObjective("Key Found! Unlock the Terrace Door");
+            if (SimpleInventory.Instance != null)
+                SimpleInventory.Instance.AddItem("Key", 1);
+            
+            UpdateObjective("Key Found! Find the Fire Tower and reach the top");
         }
     }
 
     public void UpdateObjective(string newText)
     {
+        // Stop any currently running fades so they don't clash
         StopAllCoroutines();
+        
+        // 1. Update the side tracker
         StartCoroutine(FadeObjective(newText));
+
+        // 2. Show the "Objective Updated" Popup
+        if (popupCanvasGroup != null)
+        {
+            StartCoroutine(ShowPopup());
+        }
     }
+
+    // --- COROUTINES ---
 
     IEnumerator FadeObjective(string text)
     {
@@ -94,5 +111,32 @@ public class ObjectiveManager : MonoBehaviour
             trackerCanvasGroup.alpha = t;
             yield return null;
         }
+        trackerCanvasGroup.alpha = 1f;
+    }
+
+    IEnumerator ShowPopup()
+    {
+        // 1. Fade In
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * 3f; // Multiply speed to fade in fast
+            popupCanvasGroup.alpha = t;
+            yield return null;
+        }
+        popupCanvasGroup.alpha = 1f;
+
+        // 2. Wait
+        yield return new WaitForSeconds(popupDuration);
+
+        // 3. Fade Out
+        t = 1f;
+        while (t > 0f)
+        {
+            t -= Time.deltaTime; // Fade out slower
+            popupCanvasGroup.alpha = t;
+            yield return null;
+        }
+        popupCanvasGroup.alpha = 0f;
     }
 }
