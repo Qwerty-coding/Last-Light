@@ -1691,8 +1691,8 @@ CanvasGroup:
   m_GameObject: {fileID: 99846831}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &99846835
 MonoBehaviour:
@@ -2174,6 +2174,8 @@ MonoBehaviour:
   rotSpeed: 2
   isLocked: 1
   keyID: Key
+  isStoryDoor: 1
+  nextObjective: Door Unlocked! Enter the Portal at the top.
 --- !u!4 &109354958 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: c3a2e9c7a879b7d41b29957e6f9ed6c0, type: 3}
@@ -2872,6 +2874,8 @@ MonoBehaviour:
   rotSpeed: 2
   isLocked: 1
   keyID: Key
+  isStoryDoor: 1
+  nextObjective: Door Unlocked! Enter the Portal at the top.
 --- !u!4 &122235887 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: c3a2e9c7a879b7d41b29957e6f9ed6c0, type: 3}
@@ -15969,12 +15973,12 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 106
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 4000
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -16007,7 +16011,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -18977,7 +18981,7 @@ MonoBehaviour:
   audioSource: {fileID: 427594722}
   minInterval: 3
   maxInterval: 8
-  areaSize: {x: 10000, y: 900}
+  areaSize: {x: 1500, y: 1500}
   heightY: 25
 --- !u!4 &528382320
 Transform:
@@ -35954,6 +35958,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trackerText: {fileID: 812188336}
   trackerCanvasGroup: {fileID: 812188339}
+  popupCanvasGroup: {fileID: 99846834}
+  popupDuration: 2
   woodRequired: 10
   zombiesRequired: 3
 --- !u!4 &978584175
@@ -43552,6 +43558,8 @@ MonoBehaviour:
   rotSpeed: 2
   isLocked: 1
   keyID: Key
+  isStoryDoor: 0
+  nextObjective: Door Unlocked! Enter the Portal at the top.
 --- !u!1001 &1058598199
 PrefabInstance:
   m_ObjectHideFlags: 0

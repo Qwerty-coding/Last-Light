@@ -12,6 +12,10 @@ public class KeyDoorMech : MonoBehaviour
     // MATCH THIS NAME EXACTLY TO YOUR PICKUP SCRIPT
     public string keyID = "Key"; 
 
+    [Header("Objective Settings")]
+    public bool isStoryDoor = false; // Check this TRUE in Inspector for the Fire Tower door
+    public string nextObjective = "Door Unlocked! Enter the Portal at the top.";
+
     private bool isOpen = false;
     private bool isPlayerInRange = false;
 
@@ -21,7 +25,6 @@ public class KeyDoorMech : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             // 2. CHECK: Player is close AND looking at the door
-            // (Assumes you still have SelectionManager in your scene)
             if (isPlayerInRange && SelectionManager.instance.onTarget)
             {
                 TryToOpen();
@@ -37,16 +40,20 @@ public class KeyDoorMech : MonoBehaviour
     {
         if (isLocked)
         {
-            // --- NEW CHECK: Ask SimpleInventory ---
+            // --- CHECK: Ask SimpleInventory ---
             if (SimpleInventory.Instance.HasItem(keyID))
             {
                 Debug.Log($"Key '{keyID}' Used! Opening door.");
                 
-                // Optional: Remove key after use? 
-                // SimpleInventory.Instance.RemoveItem(keyID); 
-                
-                isLocked = false; // Unlock forever
+                // Unlock forever
+                isLocked = false; 
                 isOpen = !isOpen; 
+
+                // 🔥 UPDATE OBJECTIVE HERE 🔥
+                if (isStoryDoor && ObjectiveManager.Instance != null)
+                {
+                    ObjectiveManager.Instance.UpdateObjective(nextObjective);
+                }
             }
             else
             {
