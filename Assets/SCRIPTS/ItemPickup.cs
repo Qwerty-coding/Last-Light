@@ -3,20 +3,23 @@ using UnityEngine;
 public class ItemPickup : MonoBehaviour
 {
     [Header("Settings")]
-    public string itemID;   // Make sure this matches ItemNames.LOGS exactly in Inspector!
+    public string itemID;   
     public int amount = 1;
+
+    [Header("Axe Visual Reference")]
+    [Tooltip("Drag the Axe child object from your Player Camera here")]
+    public GameObject axeInHand; // This represents the 'check box' you want ticked
 
     [Header("Debug View")]
     public bool isPlayerInRange = false;
 
     private bool wasCollected = false;
 
-    // FIX 1: Clean the ID as soon as the object loads
     private void Awake()
     {
         if (!string.IsNullOrEmpty(itemID))
         {
-            itemID = itemID.Trim(); // Removes accidental spaces like "Logs "
+            itemID = itemID.Trim(); 
         }
     }
 
@@ -24,7 +27,6 @@ public class ItemPickup : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            // Consolidate checks for cleaner reading
             if (isPlayerInRange && 
                 SelectionManager.instance != null && 
                 SelectionManager.instance.onTarget && 
@@ -40,14 +42,14 @@ public class ItemPickup : MonoBehaviour
         if (wasCollected) return;
         if (SimpleInventory.Instance == null) return;
 
-        Debug.Log($"[ItemPickup] Collecting: '{itemID}' Amount: {amount}");
+        // ✅ ACTIVATE THE CHECKBOX
+        // This line ticks the 'active' box for the axe model in your hand
+        if (itemID == ItemNames.AXE && axeInHand != null)
+        {
+            axeInHand.SetActive(true);
+        }
 
-        // ✅ ADD ITEM
         SimpleInventory.Instance.AddItem(itemID, amount);
-
-        // ✅ CHECK TRIGGER MATCHING
-        // This ensures the logic fires even if there is a tiny casing mismatch
-        // assuming your ItemNames constants are standard
         HandleObjectiveTrigger();
 
         wasCollected = true;
@@ -65,7 +67,6 @@ public class ItemPickup : MonoBehaviour
     {
         if (ObjectiveManager.Instance == null) return;
 
-        // Using simple string comparison for safety
         if (itemID == ItemNames.GUN)
         {
             ObjectiveManager.Instance.UpdateObjective("Reach the Fire Tower");
