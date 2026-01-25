@@ -8,7 +8,6 @@ public class bullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        // Debug log to see what the bullet is hitting
         Debug.Log("Bullet hit object: " + collision.gameObject.name + " with Tag: " + collision.gameObject.tag);
 
         if (collision.gameObject.CompareTag("Target"))
@@ -23,9 +22,9 @@ public class bullet : MonoBehaviour
             Destroy(gameObject);
         }
 
+        // REGULAR ZOMBIES
         if (collision.gameObject.CompareTag("Zombie"))
         {
-            // 1. Try to find the "Zombie1" script (matches your screenshot)
             Zombie1 z1 = collision.gameObject.GetComponent<Zombie1>();
             
             if (z1 != null)
@@ -33,7 +32,6 @@ public class bullet : MonoBehaviour
                 Debug.Log("Found 'Zombie1' script! Dealing " + bulletDamage + " damage.");
                 z1.TakeDamage(bulletDamage);
             }
-            // 2. Fallback: If you ever switch back to the "Zombie" script
             else 
             {
                 Zombie z = collision.gameObject.GetComponent<Zombie>();
@@ -42,10 +40,24 @@ public class bullet : MonoBehaviour
                     Debug.Log("Found 'Zombie' script! Dealing " + bulletDamage + " damage.");
                     z.TakeDamage(bulletDamage);
                 }
-                else
-                {
-                    Debug.LogError("CRITICAL ERROR: Bullet hit an object tagged 'Zombie', but NO 'Zombie1' or 'Zombie' script was found on it!");
-                }
+            }
+
+            Destroy(gameObject);
+        }
+
+        // BOSS ZOMBIE
+        if (collision.gameObject.CompareTag("Boss"))
+        {
+            BossZombie boss = collision.gameObject.GetComponent<BossZombie>();
+            
+            if (boss != null)
+            {
+                Debug.Log("🎯 HIT BOSS! Dealing " + bulletDamage + " damage.");
+                boss.TakeDamage(bulletDamage);
+            }
+            else
+            {
+                Debug.LogError("Boss tagged object has no BossZombie script!");
             }
 
             Destroy(gameObject);
