@@ -34,22 +34,31 @@ public class Zombie1 : MonoBehaviour
     public float attackingRadius = 2f;
     public float stopChasingRadius = 25f; 
 
+    [Header("Zombie Sounds")]
+    public AudioSource audioSource;
+    public AudioClip idleSound;
+    public AudioClip runSound;
+    public AudioClip deathSound;
+
     private bool isChasing = false;
-    private bool countedAsDead = false;   // 🔥 PREVENT DOUBLE COUNT
+    private bool countedAsDead = false;
 
     private void Awake()
     {
         zombieAgent = GetComponent<NavMeshAgent>();
         playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+        
+        // Ensure AudioSource is set up for 3D
+        if (audioSource != null)
+        {
+            audioSource.spatialBlend = 1f; // Force 3D sound
+            audioSource.playOnAwake = false;
+        }
     }
 
     private void Update()
     {
-        // Kill-switch
-        if (health <= 0 || anim.GetBool("Died")) 
-        {
-            return;
-        }
+        if (health <= 0 || anim.GetBool("Died")) return;
 
         bool playerInAttackingRadius = Physics.CheckSphere(transform.position, attackingRadius, PlayerLayer);
         float currentDetectionRange = isChasing ? stopChasingRadius : visionRadius;
@@ -68,6 +77,25 @@ public class Zombie1 : MonoBehaviour
         {
             isChasing = false;
             Guard();
+        }
+
+        HandleMovementAudio();
+    }
+
+    private void HandleMovementAudio()
+    {
+        if (audioSource == null) return;
+
+        // Determine which clip should be playing
+        AudioClip targetClip = (zombieAgent.velocity.magnitude > 0.1f) ? runSound : idleSound;
+
+        // Only change if the clip is different
+        if (audioSource.clip != targetClip)
+        {
+            audioSource.clip = targetClip;
+            audioSource.loop = true;
+            if (targetClip != null) audioSource.Play();
+            else audioSource.Stop();
         }
     }
 
@@ -105,11 +133,7 @@ public class Zombie1 : MonoBehaviour
 
         if (playerTransform != null)
         {
-            Vector3 targetPostition = new Vector3(
-                playerTransform.position.x,
-                transform.position.y,
-                playerTransform.position.z
-            );
+            Vector3 targetPostition = new Vector3(playerTransform.position.x, transform.position.y, playerTransform.position.z);
             transform.LookAt(targetPostition);
         }
 
@@ -120,15 +144,12 @@ public class Zombie1 : MonoBehaviour
             anim.SetBool("Running", false);
 
             RaycastHit hit;
-            Vector3 origin = AttackingRaycastArea != null
-                ? AttackingRaycastArea.transform.position
-                : transform.position + Vector3.up;
+            Vector3 origin = AttackingRaycastArea != null ? AttackingRaycastArea.transform.position : transform.position + Vector3.up;
 
             if (Physics.Raycast(origin, transform.forward, out hit, attackingRadius, PlayerLayer))
             {
                 var pHealth = hit.collider.GetComponent<PlayerHealth>();
-                if (pHealth != null)
-                    pHealth.TakeDamage(giveDamage);
+                if (pHealth != null) pHealth.TakeDamage(giveDamage);
             }
 
             alreadyAttacked = true;
@@ -139,13 +160,8 @@ public class Zombie1 : MonoBehaviour
     public void TakeDamage(float damage)
     {
         if (health <= 0) return;
-
         health -= damage;
-
-        if (health <= 0)
-        {
-            Die();
-        }
+        if (health <= 0) Die();
     }
 
     private void Die()
@@ -153,10 +169,14 @@ public class Zombie1 : MonoBehaviour
         if (countedAsDead) return;
         countedAsDead = true;
 
-        // 🔥 INFORM OBJECTIVE MANAGER
-        if (ObjectiveManager.Instance != null)
+        if (ObjectiveManager.Instance != null) ObjectiveManager.Instance.OnZombieKilled();
+
+        // Audio Death Logic
+        if (audioSource != null)
         {
-            ObjectiveManager.Instance.OnZombieKilled();
+            audioSource.Stop();
+            audioSource.loop = false;
+            audioSource.PlayOneShot(deathSound);
         }
 
         anim.SetBool("Died", true);
@@ -166,7 +186,6 @@ public class Zombie1 : MonoBehaviour
 
         zombieAgent.isStopped = true;
         zombieAgent.enabled = false;
-
         CancelInvoke(nameof(ResetAttack));
 
         CapsuleCollider capsule = GetComponent<CapsuleCollider>();
