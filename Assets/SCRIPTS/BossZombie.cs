@@ -6,28 +6,30 @@ using System.Collections;
 public class BossZombie : MonoBehaviour
 {
     [Header("Boss Stats")]
+    public string bossName = "Subject Alpha";
     public float maxHealth = 500f;
     private float currentHealth;
-    public float moveSpeed = 3f;
+    public float moveSpeed = 3.5f;
     public float attackDamage = 25f;
 
     [Header("Attack Settings")]
     public float meleeRange = 3f;
     public float chargeRange = 15f;
     public float groundPoundRange = 8f;
-
+    
+    // Cooldowns
     public float meleeCooldown = 2f;
-    public float chargeCooldown = 8f;
-    public float groundPoundCooldown = 12f;
+    public float chargeCooldown = 10f;
+    public float groundPoundCooldown = 15f;
 
     private float lastMeleeTime;
     private float lastChargeTime;
     private float lastGroundPoundTime;
 
     [Header("Charge Attack")]
-    public float chargeSpeed = 10f;
-    public float chargeDuration = 2f;
-    public float chargeWindupTime = 1f;
+    public float chargeSpeed = 12f; // Increased for better feel
+    public float chargeDuration = 1.5f;
+    public float chargeWindupTime = 1.5f;
     public ParticleSystem chargeEffect;
 
     [Header("Ground Pound")]
@@ -37,19 +39,21 @@ public class BossZombie : MonoBehaviour
     public GameObject groundPoundEffect;
 
     [Header("UI & Phase")]
-    public GameObject healthBarUI;
-    public Image healthBarFill;
+    public Canvas healthBarCanvas; // Drag 'HealthBarCanvas' here
+    public Image healthBarFill;    // Drag 'HealthFill' here
+    public Text bossNameText;      // (Optional) Drag 'BossName' text here
     public bool battleStarted = false;
+    public bool activateOnStart = false; // Check this for testing without teleporter
+
     private bool isEnraged = false;
 
     [Header("References")]
     public Transform player;
     public NavMeshAgent agent;
     public Animator anim;
-    public LayerMask playerLayer; // Make sure this is set to "Player" in Inspector!
+    public LayerMask playerLayer; 
     public AudioSource roarSound;
-
-    private Camera mainCam;
+    private Renderer bossRenderer;
 
     private enum BossState { Idle, Chasing, Melee, Charge, GroundPound, Dead }
     private BossState currentState = BossState.Idle;
@@ -57,62 +61,107 @@ public class BossZombie : MonoBehaviour
 
     void Start()
     {
+        // 1. Initialization
         currentHealth = maxHealth;
+        bossRenderer = GetComponentInChildren<Renderer>();
 
-        if (!player)
-            player = GameObject.FindGameObjectWithTag("Player")?.transform;
-
-        if (!player)
-        {
-            Debug.LogError("BossZombie: Player not found! Tag your player as 'Player'.");
-            enabled = false;
-            return;
-        }
-
+        // Auto-find references if missing
+        if (!player) player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (!agent) agent = GetComponent<NavMeshAgent>();
         if (!anim) anim = GetComponent<Animator>();
 
-        agent.speed = moveSpeed;
-        mainCam = Camera.main;
+        if (!player)
+        {
+            Debug.LogError("CRITICAL: Player not found! Tag your player as 'Player'.");
+            return;
+        }
 
-        if (healthBarUI) healthBarUI.SetActive(false);
+        agent.speed = moveSpeed;
+
+        // 2. Health Bar Setup (Fix 3 & 7)
+        if (healthBarCanvas != null)
+        {
+            // Detach from boss so it doesn't rotate with him
+            healthBarCanvas.transform.SetParent(null); 
+            healthBarCanvas.gameObject.SetActive(false); // Hide until battle starts
+            
+            if (bossNameText) bossNameText.text = bossName;
+            UpdateHealthBar();
+        }
+
+        // 3. Activation Logic
+        if (activateOnStart)
+        {
+            StartBossFight();
+        }
+        else
+        {
+            // Dormant state
+            agent.isStopped = true; 
+            canAct = false;
+        }
     }
 
+    // Fix 3: Keep UI following boss even though it's detached
     void LateUpdate()
     {
-        // Smoothly rotate UI to face camera
-        if (!healthBarUI || !battleStarted || currentState == BossState.Dead) return;
-
-        healthBarUI.transform.position = transform.position + Vector3.up * 3.5f;
-        healthBarUI.transform.LookAt(mainCam.transform);
-        healthBarUI.transform.Rotate(0, 180, 0);
+        if (healthBarCanvas != null && currentHealth > 0)
+        {
+            // Position above boss head
+            healthBarCanvas.transform.position = transform.position + Vector3.up * 3.5f; 
+            // Face camera
+            healthBarCanvas.transform.LookAt(Camera.main.transform);
+            healthBarCanvas.transform.Rotate(0, 180, 0);
+        }
     }
 
     void Update()
     {
         if (!battleStarted || currentState == BossState.Dead || !canAct || !player) return;
 
+        // Fix 4: Anti-Float Logic (Ensure he sticks to NavMesh)
+        if (agent.enabled && agent.isOnNavMesh)
+        {
+            float yDiff = Mathf.Abs(transform.position.y - agent.nextPosition.y);
+            if(yDiff > 1f) agent.Warp(transform.position); // Snap if desynced
+        }
+
         float distance = Vector3.Distance(transform.position, player.position);
 
+        // State Machine Logic
         if (distance <= groundPoundRange && Time.time >= lastGroundPoundTime + groundPoundCooldown)
+        {
             StartGroundPound();
+        }
         else if (distance > meleeRange && distance <= chargeRange && Time.time >= lastChargeTime + chargeCooldown)
+        {
             StartCharge();
+        }
         else if (distance <= meleeRange && Time.time >= lastMeleeTime + meleeCooldown)
+        {
             StartMelee();
+        }
         else
+        {
             Chase();
+        }
     }
 
     // -------- ACTIVATION --------
     public void StartBossFight()
     {
-        battleStarted = true;
-        currentState = BossState.Chasing;
+        if (battleStarted) return;
 
-        if (healthBarUI) healthBarUI.SetActive(true);
+        battleStarted = true;
+        canAct = true;
+        currentState = BossState.Chasing;
+        agent.isStopped = false;
+
+        if (healthBarCanvas) healthBarCanvas.gameObject.SetActive(true);
         if (roarSound) roarSound.Play();
+        
         anim.SetTrigger("Roar");
+        Debug.Log("🧟 BOSS AWAKENED!");
     }
 
     // -------- MOVEMENT --------
@@ -121,6 +170,7 @@ public class BossZombie : MonoBehaviour
         currentState = BossState.Chasing;
         agent.isStopped = false;
         agent.SetDestination(player.position);
+        
         anim.SetBool("Running", true);
         anim.SetBool("Attacking", false);
     }
@@ -131,91 +181,114 @@ public class BossZombie : MonoBehaviour
         CancelInvoke();
         currentState = BossState.Melee;
         canAct = false;
-        agent.isStopped = true;
+        agent.isStopped = true; // Stop moving to punch
 
+        anim.SetBool("Running", false);
         anim.SetBool("Attacking", true);
         lastMeleeTime = Time.time;
 
-        // SAFETY FALLBACK: Even if you forget Animation Events, this deals damage at 0.6s
-        Invoke(nameof(DealMeleeDamage), 0.6f); 
-        
-        Invoke(nameof(ResetState), 1.5f);
+        // Safety: If Animation Event fails, deal damage anyway after delay
+        Invoke(nameof(DealMeleeDamage), 0.5f); 
+        Invoke(nameof(ResetState), 1.2f);
     }
 
+    // Called by Animation Event OR Invoke
     public void DealMeleeDamage()
     {
         if (currentState != BossState.Melee) return;
 
-        RaycastHit hit;
-        Vector3 origin = transform.position + Vector3.up * 1.5f;
-
-        // Uses playerLayer to only hit the player
-        if (Physics.Raycast(origin, transform.forward, out hit, meleeRange, playerLayer))
-            hit.collider.GetComponent<PlayerHealth>()?.TakeDamage(attackDamage);
+        // Simple distance check for hit
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (dist <= meleeRange + 1f) // +1 buffer
+        {
+            // You can replace this with your PlayerHealth script logic
+             Debug.Log("Boss Hit Player!");
+             player.GetComponent<PlayerHealth>()?.TakeDamage(attackDamage);
+        }
     }
 
-    // -------- CHARGE --------
+    // -------- CHARGE (Fix 5) --------
+
+    // -------- CHARGE ATTACK (Fixed Sequence) --------
     void StartCharge()
     {
         CancelInvoke();
         currentState = BossState.Charge;
         canAct = false;
+        
+        // 1. HARD STOP (Fixes the Sliding!)
         agent.isStopped = true;
+        agent.velocity = Vector3.zero; 
+        agent.ResetPath();
 
+        // 2. Play Roar (Windup)
         anim.SetTrigger("ChargeWindup");
         lastChargeTime = Time.time;
 
+        // 3. Wait for Roar to finish, then Charge
         Invoke(nameof(ExecuteCharge), chargeWindupTime);
     }
 
     void ExecuteCharge()
     {
-        agent.enabled = false; // Critical: Disable NavMeshAgent so we can move manually
-
+        // 4. Start the Sprint
+        agent.enabled = false; 
         Vector3 dir = (player.position - transform.position).normalized;
-        StartCoroutine(ChargeRoutine(dir));
+        StartCoroutine(ChargeMovement(dir));
     }
 
-    IEnumerator ChargeRoutine(Vector3 direction)
+    IEnumerator ChargeMovement(Vector3 direction)
     {
-        float t = 0f;
+        float elapsed = 0f;
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = startPos + (direction * chargeSpeed * chargeDuration);
+        
+        // Keep him strictly on the floor (Fixes Flying)
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(targetPos, out hit, 5f, NavMesh.AllAreas))
+            targetPos = hit.position;
+
         if (chargeEffect) chargeEffect.Play();
 
-        // LayerMask to hit Walls/Ground but IGNORE Player
-        // This prevents the boss from stopping when he sees the player
-        int wallMask = ~playerLayer; 
-
-        while (t < chargeDuration)
+        // --- THE SPRINT PHASE ---
+        // Trigger the Sprint Animation (Make sure you have a Bool or Trigger for this!)
+        // Or relying on the transition from Roar -> Sprint via Exit Time
+        
+        while (elapsed < chargeDuration)
         {
-            // Stop if we hit a wall (but not the player)
-            if (Physics.Raycast(transform.position + Vector3.up, direction, 1.5f, wallMask))
-                break;
+            float t = elapsed / chargeDuration;
+            transform.position = Vector3.Lerp(startPos, targetPos, t);
 
-            transform.position += direction * chargeSpeed * Time.deltaTime;
-
-            // Check if we hit the player to deal damage
+            // Hit Check
             Collider[] hits = Physics.OverlapSphere(transform.position, 1.5f, playerLayer);
             if (hits.Length > 0)
             {
+                Debug.Log("💥 TACKLE HIT!");
                 hits[0].GetComponent<PlayerHealth>()?.TakeDamage(attackDamage * 1.5f);
-                break; // Stop charge on impact
+                break; // Stop immediately on impact
             }
 
-            t += Time.deltaTime;
+            elapsed += Time.deltaTime;
             yield return null;
         }
-
-        // Snap agent back to navmesh to prevent errors
-        agent.enabled = true; 
-        NavMeshHit navHit;
-        if(NavMesh.SamplePosition(transform.position, out navHit, 2.0f, NavMesh.AllAreas))
-        {
-             agent.Warp(navHit.position);
-        }
         
+        if (chargeEffect) chargeEffect.Stop();
+
+        // --- THE STUMBLE PHASE (New!) ---
+        // 1. Snap to NavMesh
+        agent.enabled = true;
+        if (NavMesh.SamplePosition(transform.position, out hit, 3f, NavMesh.AllAreas))
+            agent.Warp(hit.position);
+            
+        // 2. Play Stumble Animation
+        anim.SetTrigger("Stumble"); // <--- MAKE SURE YOU ADD THIS PARAMETER!
+        
+        // 3. Wait for Stumble to finish (e.g., 1.5 seconds)
+        yield return new WaitForSeconds(1.5f);
+
+        // 4. Resume Chase
         ResetState();
     }
-
     // -------- GROUND POUND --------
     void StartGroundPound()
     {
@@ -227,80 +300,60 @@ public class BossZombie : MonoBehaviour
         anim.SetTrigger("GroundPound");
         lastGroundPoundTime = Time.time;
 
-        Invoke(nameof(ExecuteGroundPound), 1f);
+        Invoke(nameof(ExecuteGroundPound), 1.0f); // Adjust based on anim length
     }
 
     void ExecuteGroundPound()
     {
-        if (groundPoundEffect)
-            Instantiate(groundPoundEffect, transform.position, Quaternion.identity);
+        if (groundPoundEffect) Instantiate(groundPoundEffect, transform.position, Quaternion.identity);
 
-        // Hits only objects on 'Player' layer
         Collider[] hits = Physics.OverlapSphere(transform.position, groundPoundRadius, playerLayer);
-        foreach (Collider hit in hits)
+        foreach (var hit in hits)
         {
             hit.GetComponent<PlayerHealth>()?.TakeDamage(groundPoundDamage);
-
-            Rigidbody rb = hit.GetComponent<Rigidbody>();
-            if (rb)
-            {
-                Vector3 dir = (hit.transform.position - transform.position).normalized;
-                rb.AddForce(dir * groundPoundKnockback, ForceMode.Impulse);
-            }
+            // Add knockback logic here if needed
+            Debug.Log("Ground Pound Hit!");
         }
 
-        Invoke(nameof(ResetState), 2f);
+        Invoke(nameof(ResetState), 2.0f);
     }
 
-    // -------- DAMAGE --------
+    // -------- HEALTH & DEATH --------
     public void TakeDamage(float amount)
     {
         if (currentState == BossState.Dead) return;
 
         currentHealth -= amount;
-        if (healthBarFill)
-            healthBarFill.fillAmount = currentHealth / maxHealth;
+        UpdateHealthBar();
 
-        // ENRAGE PHASE
-        if (!isEnraged && currentHealth <= maxHealth * 0.5f)
-        {
-            isEnraged = true;
+        if (currentHealth <= 0) Die();
+        else anim.SetTrigger("Hit");
+    }
 
-            // Make him Red
-            Renderer r = GetComponentInChildren<Renderer>();
-            if(r != null) {
-                r.material.color = Color.red; 
-            }
-
-            moveSpeed *= 1.5f;
-            agent.speed = moveSpeed;
-        }
-
-        if (currentHealth <= 0)
-            Die();
-        else
-            anim.SetTrigger("Hit");
+    void UpdateHealthBar()
+    {
+        if (healthBarFill) healthBarFill.fillAmount = currentHealth / maxHealth;
     }
 
     void Die()
     {
-        CancelInvoke();
-        StopAllCoroutines(); // Stop any charging immediately
         currentState = BossState.Dead;
         agent.isStopped = true;
-
+        canAct = false;
         anim.SetTrigger("Died");
-        if (healthBarUI) healthBarUI.SetActive(false);
-
+        
+        if (healthBarCanvas) healthBarCanvas.gameObject.SetActive(false);
         Destroy(gameObject, 5f);
     }
 
-    // -------- RESET --------
     void ResetState()
     {
-        CancelInvoke();
+        if (currentState == BossState.Dead) return;
         currentState = BossState.Chasing;
         canAct = true;
+        agent.isStopped = false;
         anim.SetBool("Attacking", false);
+       
+        agent.SetDestination(player.position);
     }
 }
