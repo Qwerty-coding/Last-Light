@@ -13988,6 +13988,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a345c64aa4913a743908b0810c8f8ea6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bossName: Subject Alpha
   maxHealth: 500
   moveSpeed: 3
   attackDamage: 25
@@ -14005,9 +14006,11 @@ MonoBehaviour:
   groundPoundDamage: 40
   groundPoundKnockback: 10
   groundPoundEffect: {fileID: 0}
-  healthBarUI: {fileID: 1646883770}
+  healthBarCanvas: {fileID: 0}
   healthBarFill: {fileID: 900427783}
+  bossNameText: {fileID: 0}
   battleStarted: 0
+  activateOnStart: 0
   player: {fileID: 1926322348}
   agent: {fileID: 356480938}
   anim: {fileID: 356480940}
@@ -92106,12 +92109,12 @@ MonoBehaviour:
   PlayerLayer:
     serializedVersion: 2
     m_Bits: 256
+  anim: {fileID: 2089997063}
   walkPoints:
   - {fileID: 205631680}
   - {fileID: 679182646}
   walkSpeed: 1.5
   timeBetweenAttacks: 1
-  anim: {fileID: 2089997063}
   runSpeed: 4
   visionRadius: 10
   attackingRadius: 2
@@ -92120,6 +92123,8 @@ MonoBehaviour:
   idleSound: {fileID: 8300000, guid: b454a6146cbb5fe40ba6b290efca0a51, type: 3}
   runSound: {fileID: 8300000, guid: 2726addc547262247a210961dc01eacf, type: 3}
   deathSound: {fileID: 8300000, guid: 89642c6e7343df344bb21e875dcff4a8, type: 3}
+  idleVolume: 1
+  runVolume: 0.7
 --- !u!4 &2089997061
 Transform:
   m_ObjectHideFlags: 0
@@ -92214,9 +92219,9 @@ AudioSource:
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
-  DopplerLevel: 1
+  DopplerLevel: 0
   MinDistance: 1
-  MaxDistance: 20
+  MaxDistance: 60
   Pan2D: 0
   rolloffMode: 1
   BypassEffects: 0
