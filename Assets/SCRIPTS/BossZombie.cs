@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 
 public class BossZombie : MonoBehaviour
@@ -9,27 +10,21 @@ public class BossZombie : MonoBehaviour
     public string bossName = "Subject Alpha";
     public float maxHealth = 500f;
     private float currentHealth;
-    public float moveSpeed = 3.5f;
+    public float moveSpeed = 3f;
     public float attackDamage = 25f;
 
     [Header("Attack Settings")]
     public float meleeRange = 3f;
     public float chargeRange = 15f;
     public float groundPoundRange = 8f;
-    
-    // Cooldowns
     public float meleeCooldown = 2f;
-    public float chargeCooldown = 10f;
-    public float groundPoundCooldown = 15f;
-
-    private float lastMeleeTime;
-    private float lastChargeTime;
-    private float lastGroundPoundTime;
+    public float chargeCooldown = 8f;
+    public float groundPoundCooldown = 12f;
 
     [Header("Charge Attack")]
-    public float chargeSpeed = 12f; // Increased for better feel
-    public float chargeDuration = 1.5f;
-    public float chargeWindupTime = 1.5f;
+    public float chargeSpeed = 10f;
+    public float chargeDuration = 2f;
+    public float chargeWindupTime = 1f;
     public ParticleSystem chargeEffect;
 
     [Header("Ground Pound")]
@@ -39,96 +34,155 @@ public class BossZombie : MonoBehaviour
     public GameObject groundPoundEffect;
 
     [Header("UI & Phase")]
-    public Canvas healthBarCanvas; // Drag 'HealthBarCanvas' here
-    public Image healthBarFill;    // Drag 'HealthFill' here
-    public Text bossNameText;      // (Optional) Drag 'BossName' text here
+    public Canvas healthBarCanvas;
+    public Image healthBarFill;
+    public TMP_Text bossNameText;
     public bool battleStarted = false;
-    public bool activateOnStart = false; // Check this for testing without teleporter
-
-    private bool isEnraged = false;
+    public bool activateOnStart = false;
 
     [Header("References")]
     public Transform player;
     public NavMeshAgent agent;
     public Animator anim;
-    public LayerMask playerLayer; 
+    public LayerMask playerLayer;
     public AudioSource roarSound;
-    private Renderer bossRenderer;
 
-    private enum BossState { Idle, Chasing, Melee, Charge, GroundPound, Dead }
-    private BossState currentState = BossState.Idle;
-    private bool canAct = true;
+    private enum State { Idle, Chasing, Attacking, Charging, GroundPound, Dead }
+    private State currentState = State.Idle;
+
+    private float lastMeleeTime;
+    private float lastChargeTime;
+    private float lastGroundPoundTime;
+    private bool isCharging = false;
+    private bool isEnraged = false;
 
     void Start()
     {
-        // 1. Initialization
         currentHealth = maxHealth;
-        bossRenderer = GetComponentInChildren<Renderer>();
 
-        // Auto-find references if missing
-        if (!player) player = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (!agent) agent = GetComponent<NavMeshAgent>();
-        if (!anim) anim = GetComponent<Animator>();
+        // Auto-find components
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        
+        if (agent == null)
+            agent = GetComponent<NavMeshAgent>();
+        
+        if (anim == null)
+            anim = GetComponent<Animator>();
 
-        if (!player)
+        // Configure NavMeshAgent
+        if (agent != null)
         {
-            Debug.LogError("CRITICAL: Player not found! Tag your player as 'Player'.");
-            return;
+            agent.speed = moveSpeed;
+            agent.angularSpeed = 120;
+            agent.acceleration = 8;
+            agent.stoppingDistance = 2f;
+            agent.autoBraking = true;
         }
 
-        agent.speed = moveSpeed;
+        // Setup health bar
+        UpdateHealthBar();
+        if (bossNameText != null) 
+            bossNameText.text = bossName;
 
-        // 2. Health Bar Setup (Fix 3 & 7)
+        // Detach health bar so it doesn't rotate with boss
         if (healthBarCanvas != null)
-        {
-            // Detach from boss so it doesn't rotate with him
-            healthBarCanvas.transform.SetParent(null); 
-            healthBarCanvas.gameObject.SetActive(false); // Hide until battle starts
-            
-            if (bossNameText) bossNameText.text = bossName;
-            UpdateHealthBar();
-        }
+            healthBarCanvas.transform.SetParent(null);
 
-        // 3. Activation Logic
-        if (activateOnStart)
+        // Start inactive unless testing
+        if (!activateOnStart)
         {
-            StartBossFight();
+            battleStarted = false;
+            if (agent != null) agent.isStopped = true;
+            if (healthBarCanvas != null) healthBarCanvas.gameObject.SetActive(false);
+            this.enabled = false; // Disable script entirely
         }
         else
         {
-            // Dormant state
-            agent.isStopped = true; 
-            canAct = false;
+            StartBossFight();
         }
     }
 
-    // Fix 3: Keep UI following boss even though it's detached
+    public void StartBossFight()
+    {
+        if (battleStarted) return;
+
+        battleStarted = true;
+        this.enabled = true;
+
+        if (agent != null) 
+            agent.isStopped = false;
+
+        if (healthBarCanvas != null)
+            healthBarCanvas.gameObject.SetActive(true);
+
+        if (roarSound != null) 
+            roarSound.Play();
+
+        Debug.Log("🧟 BOSS FIGHT STARTED!");
+    }
+
+    void Update()
+    {
+        if (!battleStarted || currentState == State.Dead || player == null)
+            return;
+
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+
+        switch (currentState)
+        {
+            case State.Idle:
+            case State.Chasing:
+                ChasePlayer(distToPlayer);
+                DecideAttack(distToPlayer);
+                break;
+        }
+    }
+
     void LateUpdate()
     {
-        if (healthBarCanvas != null && currentHealth > 0)
+        // Update health bar position (prevents jitter)
+        if (healthBarCanvas != null && currentState != State.Dead && battleStarted)
         {
-            // Position above boss head
-            healthBarCanvas.transform.position = transform.position + Vector3.up * 3.5f; 
-            // Face camera
+            healthBarCanvas.transform.position = transform.position + Vector3.up * 4f;
             healthBarCanvas.transform.LookAt(Camera.main.transform);
             healthBarCanvas.transform.Rotate(0, 180, 0);
         }
     }
 
-    void Update()
+    void ChasePlayer(float distance)
     {
-        if (!battleStarted || currentState == BossState.Dead || !canAct || !player) return;
+        if (isCharging || agent == null || !agent.isOnNavMesh)
+            return;
 
-        // Fix 4: Anti-Float Logic (Ensure he sticks to NavMesh)
-        if (agent.enabled && agent.isOnNavMesh)
+        currentState = State.Chasing;
+        agent.isStopped = false;
+        agent.SetDestination(player.position);
+
+        // Update animations based on actual movement
+        float velocity = agent.velocity.magnitude;
+        
+        if (velocity > 0.1f)
         {
-            float yDiff = Mathf.Abs(transform.position.y - agent.nextPosition.y);
-            if(yDiff > 1f) agent.Warp(transform.position); // Snap if desynced
+            if (anim != null)
+            {
+                anim.SetBool("Walking", velocity < 2f);
+                anim.SetBool("Running", velocity >= 2f);
+                anim.SetBool("Attacking", false);
+            }
         }
+        else
+        {
+            if (anim != null)
+            {
+                anim.SetBool("Walking", false);
+                anim.SetBool("Running", false);
+            }
+        }
+    }
 
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        // State Machine Logic
+    void DecideAttack(float distance)
+    {
         if (distance <= groundPoundRange && Time.time >= lastGroundPoundTime + groundPoundCooldown)
         {
             StartGroundPound();
@@ -141,219 +195,292 @@ public class BossZombie : MonoBehaviour
         {
             StartMelee();
         }
-        else
-        {
-            Chase();
-        }
     }
 
-    // -------- ACTIVATION --------
-    public void StartBossFight()
-    {
-        if (battleStarted) return;
-
-        battleStarted = true;
-        canAct = true;
-        currentState = BossState.Chasing;
-        agent.isStopped = false;
-
-        if (healthBarCanvas) healthBarCanvas.gameObject.SetActive(true);
-        if (roarSound) roarSound.Play();
-        
-        anim.SetTrigger("Roar");
-        Debug.Log("🧟 BOSS AWAKENED!");
-    }
-
-    // -------- MOVEMENT --------
-    void Chase()
-    {
-        currentState = BossState.Chasing;
-        agent.isStopped = false;
-        agent.SetDestination(player.position);
-        
-        anim.SetBool("Running", true);
-        anim.SetBool("Attacking", false);
-    }
-
-    // -------- MELEE --------
     void StartMelee()
     {
-        CancelInvoke();
-        currentState = BossState.Melee;
-        canAct = false;
-        agent.isStopped = true; // Stop moving to punch
+        currentState = State.Attacking;
+        agent.isStopped = true;
 
-        anim.SetBool("Running", false);
-        anim.SetBool("Attacking", true);
+        // Face player
+        Vector3 dir = (player.position - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0, dir.z));
+
+        if (anim != null)
+        {
+            anim.SetBool("Attacking", true);
+            anim.SetBool("Running", false);
+            anim.SetBool("Walking", false);
+        }
+
+        Invoke(nameof(DealMeleeDamage), 0.6f);
+        Invoke(nameof(ResetAttack), 1.5f);
+
         lastMeleeTime = Time.time;
-
-        // Safety: If Animation Event fails, deal damage anyway after delay
-        Invoke(nameof(DealMeleeDamage), 0.5f); 
-        Invoke(nameof(ResetState), 1.2f);
     }
 
-    // Called by Animation Event OR Invoke
     public void DealMeleeDamage()
     {
-        if (currentState != BossState.Melee) return;
-
-        // Simple distance check for hit
-        float dist = Vector3.Distance(transform.position, player.position);
-        if (dist <= meleeRange + 1f) // +1 buffer
+        Collider[] hits = Physics.OverlapSphere(transform.position + transform.forward * 1.5f, 1.5f, playerLayer);
+        
+        foreach (Collider hit in hits)
         {
-            // You can replace this with your PlayerHealth script logic
-             Debug.Log("Boss Hit Player!");
-             player.GetComponent<PlayerHealth>()?.TakeDamage(attackDamage);
+            PlayerHealth ph = hit.GetComponent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(attackDamage);
+                Debug.Log($"Boss melee: {attackDamage} damage");
+
+                if (CameraShake.Instance != null)
+                    CameraShake.Instance.Shake(0.3f, 0.2f);
+            }
         }
     }
 
-    // -------- CHARGE (Fix 5) --------
-
-    // -------- CHARGE ATTACK (Fixed Sequence) --------
     void StartCharge()
     {
-        CancelInvoke();
-        currentState = BossState.Charge;
-        canAct = false;
-        
-        // 1. HARD STOP (Fixes the Sliding!)
+        currentState = State.Charging;
         agent.isStopped = true;
-        agent.velocity = Vector3.zero; 
-        agent.ResetPath();
 
-        // 2. Play Roar (Windup)
-        anim.SetTrigger("ChargeWindup");
-        lastChargeTime = Time.time;
+        if (roarSound != null) roarSound.Play();
+        if (anim != null) anim.SetTrigger("ChargeWindup");
 
-        // 3. Wait for Roar to finish, then Charge
         Invoke(nameof(ExecuteCharge), chargeWindupTime);
+        lastChargeTime = Time.time;
     }
 
     void ExecuteCharge()
     {
-        // 4. Start the Sprint
-        agent.enabled = false; 
-        Vector3 dir = (player.position - transform.position).normalized;
-        StartCoroutine(ChargeMovement(dir));
+        isCharging = true;
+        
+        if (anim != null) anim.SetBool("Charging", true);
+        if (chargeEffect != null) chargeEffect.Play();
+
+        Vector3 chargeDir = (player.position - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(chargeDir);
+
+        // CRITICAL FIX: Disable agent during manual movement
+        if (agent != null) agent.enabled = false;
+
+        StartCoroutine(ChargeMovement(chargeDir));
     }
 
     IEnumerator ChargeMovement(Vector3 direction)
     {
         float elapsed = 0f;
-        Vector3 startPos = transform.position;
-        Vector3 targetPos = startPos + (direction * chargeSpeed * chargeDuration);
-        
-        // Keep him strictly on the floor (Fixes Flying)
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(targetPos, out hit, 5f, NavMesh.AllAreas))
-            targetPos = hit.position;
 
-        if (chargeEffect) chargeEffect.Play();
-
-        // --- THE SPRINT PHASE ---
-        // Trigger the Sprint Animation (Make sure you have a Bool or Trigger for this!)
-        // Or relying on the transition from Roar -> Sprint via Exit Time
-        
         while (elapsed < chargeDuration)
         {
-            float t = elapsed / chargeDuration;
-            transform.position = Vector3.Lerp(startPos, targetPos, t);
+            // Manual movement
+            transform.position += direction * chargeSpeed * Time.deltaTime;
 
-            // Hit Check
+            // Check collision with player
             Collider[] hits = Physics.OverlapSphere(transform.position, 1.5f, playerLayer);
             if (hits.Length > 0)
             {
-                Debug.Log("💥 TACKLE HIT!");
-                hits[0].GetComponent<PlayerHealth>()?.TakeDamage(attackDamage * 1.5f);
-                break; // Stop immediately on impact
+                PlayerHealth ph = hits[0].GetComponent<PlayerHealth>();
+                if (ph != null)
+                {
+                    ph.TakeDamage(attackDamage * 1.5f);
+                    Debug.Log($"Boss charge: {attackDamage * 1.5f} damage");
+
+                    if (CameraShake.Instance != null)
+                        CameraShake.Instance.Shake(0.5f, 0.3f);
+                }
+                break;
             }
 
             elapsed += Time.deltaTime;
             yield return null;
         }
-        
-        if (chargeEffect) chargeEffect.Stop();
 
-        // --- THE STUMBLE PHASE (New!) ---
-        // 1. Snap to NavMesh
-        agent.enabled = true;
-        if (NavMesh.SamplePosition(transform.position, out hit, 3f, NavMesh.AllAreas))
-            agent.Warp(hit.position);
-            
-        // 2. Play Stumble Animation
-        anim.SetTrigger("Stumble"); // <--- MAKE SURE YOU ADD THIS PARAMETER!
-        
-        // 3. Wait for Stumble to finish (e.g., 1.5 seconds)
-        yield return new WaitForSeconds(1.5f);
+        // End charge
+        isCharging = false;
+        if (anim != null) anim.SetBool("Charging", false);
+        if (chargeEffect != null) chargeEffect.Stop();
 
-        // 4. Resume Chase
-        ResetState();
+        // CRITICAL FIX: Re-enable agent
+        if (agent != null) agent.enabled = true;
+
+        yield return new WaitForSeconds(0.5f);
+
+        currentState = State.Chasing;
     }
-    // -------- GROUND POUND --------
+
     void StartGroundPound()
     {
-        CancelInvoke();
-        currentState = BossState.GroundPound;
-        canAct = false;
+        currentState = State.GroundPound;
         agent.isStopped = true;
 
-        anim.SetTrigger("GroundPound");
-        lastGroundPoundTime = Time.time;
+        if (anim != null) anim.SetTrigger("GroundPound");
 
-        Invoke(nameof(ExecuteGroundPound), 1.0f); // Adjust based on anim length
+        Invoke(nameof(ExecuteGroundPound), 1f);
+        lastGroundPoundTime = Time.time;
     }
 
-    void ExecuteGroundPound()
+    public void ExecuteGroundPound()
     {
-        if (groundPoundEffect) Instantiate(groundPoundEffect, transform.position, Quaternion.identity);
+        if (groundPoundEffect != null)
+            Instantiate(groundPoundEffect, transform.position, Quaternion.identity);
 
+        // Fixed: Only hit player layer
         Collider[] hits = Physics.OverlapSphere(transform.position, groundPoundRadius, playerLayer);
-        foreach (var hit in hits)
+        
+        foreach (Collider hit in hits)
         {
-            hit.GetComponent<PlayerHealth>()?.TakeDamage(groundPoundDamage);
-            // Add knockback logic here if needed
-            Debug.Log("Ground Pound Hit!");
+            PlayerHealth ph = hit.GetComponent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(groundPoundDamage);
+                
+                // Knockback
+                Vector3 knockDir = (hit.transform.position - transform.position).normalized;
+                CharacterController cc = hit.GetComponent<CharacterController>();
+                if (cc != null)
+                {
+                    StartCoroutine(ApplyKnockback(cc, knockDir));
+                }
+
+                Debug.Log($"Ground pound: {groundPoundDamage} damage");
+            }
         }
 
-        Invoke(nameof(ResetState), 2.0f);
+        if (CameraShake.Instance != null)
+            CameraShake.Instance.Shake(0.8f, 0.5f);
+
+        Invoke(nameof(ResetAttack), 2f);
     }
 
-    // -------- HEALTH & DEATH --------
-    public void TakeDamage(float amount)
+    IEnumerator ApplyKnockback(CharacterController cc, Vector3 direction)
     {
-        if (currentState == BossState.Dead) return;
+        float elapsed = 0f;
+        while (elapsed < 0.3f)
+        {
+            cc.Move(direction * groundPoundKnockback * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
 
-        currentHealth -= amount;
+    void ResetAttack()
+    {
+        if (anim != null) anim.SetBool("Attacking", false);
+        currentState = State.Chasing;
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (currentState == State.Dead) return;
+
+        currentHealth -= damage;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+
+        Debug.Log($"💥 Boss took {damage} damage! HP: {currentHealth}/{maxHealth}");
+
         UpdateHealthBar();
 
-        if (currentHealth <= 0) Die();
-        else anim.SetTrigger("Hit");
+        // Enrage at 50%
+        if (!isEnraged && currentHealth <= maxHealth * 0.5f)
+        {
+            EnterEnragedMode();
+        }
+
+        if (currentHealth > 0)
+        {
+            if (anim != null) anim.SetTrigger("Hit");
+        }
+        else
+        {
+            Die();
+        }
+    }
+
+    void EnterEnragedMode()
+    {
+        isEnraged = true;
+        Debug.Log("😡 BOSS ENRAGED!");
+
+        Renderer r = GetComponentInChildren<Renderer>();
+        if (r != null) r.material.color = Color.red;
+
+        moveSpeed *= 1.5f;
+        if (agent != null) agent.speed = moveSpeed;
+
+        lastChargeTime = 0;
+        lastGroundPoundTime = 0;
+
+        if (roarSound != null) roarSound.Play();
     }
 
     void UpdateHealthBar()
     {
-        if (healthBarFill) healthBarFill.fillAmount = currentHealth / maxHealth;
+        if (healthBarFill != null)
+        {
+            healthBarFill.fillAmount = currentHealth / maxHealth;
+
+            if (!isEnraged)
+            {
+                if (currentHealth > maxHealth * 0.6f)
+                    healthBarFill.color = Color.green;
+                else if (currentHealth > maxHealth * 0.3f)
+                    healthBarFill.color = Color.yellow;
+                else
+                    healthBarFill.color = Color.red;
+            }
+            else
+            {
+                healthBarFill.color = Color.red;
+            }
+        }
     }
 
     void Die()
     {
-        currentState = BossState.Dead;
-        agent.isStopped = true;
-        canAct = false;
-        anim.SetTrigger("Died");
-        
-        if (healthBarCanvas) healthBarCanvas.gameObject.SetActive(false);
+        currentState = State.Dead;
+        battleStarted = false;
+
+        CancelInvoke();
+        StopAllCoroutines();
+
+        if (agent != null)
+        {
+            agent.isStopped = true;
+            agent.enabled = false;
+        }
+
+        if (anim != null)
+        {
+            anim.SetBool("Died", true);
+            anim.SetBool("Walking", false);
+            anim.SetBool("Running", false);
+            anim.SetBool("Attacking", false);
+        }
+
+        if (healthBarCanvas != null)
+            healthBarCanvas.gameObject.SetActive(false);
+
+        Collider col = GetComponent<Collider>();
+        if (col != null) col.enabled = false;
+
+        Debug.Log("💀 BOSS DEFEATED!");
+
+        // Stop zombie spawning
+        ZombieSpawner spawner = FindObjectOfType<ZombieSpawner>();
+        if (spawner != null) spawner.StopSpawning();
+
         Destroy(gameObject, 5f);
+        this.enabled = false;
     }
 
-    void ResetState()
+    void OnDrawGizmosSelected()
     {
-        if (currentState == BossState.Dead) return;
-        currentState = BossState.Chasing;
-        canAct = true;
-        agent.isStopped = false;
-        anim.SetBool("Attacking", false);
-       
-        agent.SetDestination(player.position);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, meleeRange);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, chargeRange);
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, groundPoundRadius);
     }
 }
