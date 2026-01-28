@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
-using TMPro;
 using System.Collections;
+using TMPro;
 
 public class BossZombie : MonoBehaviour
 {
@@ -15,17 +15,17 @@ public class BossZombie : MonoBehaviour
 
     [Header("Attack Settings")]
     public float meleeRange = 3f;
-    public float chargeRange = 15f;
+    public float seismicRoarRange = 12f;
     public float groundPoundRange = 8f;
+    
     public float meleeCooldown = 2f;
-    public float chargeCooldown = 8f;
+    public float seismicRoarCooldown = 8f;
     public float groundPoundCooldown = 12f;
 
-    [Header("Charge Attack")]
-    public float chargeSpeed = 10f;
-    public float chargeDuration = 2f;
-    public float chargeWindupTime = 1f;
-    public ParticleSystem chargeEffect;
+    [Header("Seismic Roar Attack")]
+    public float roarDamage = 35f;
+    public float roarWindupTime = 1.2f;
+    public ParticleSystem roarEffect;
 
     [Header("Ground Pound")]
     public float groundPoundRadius = 8f;
@@ -33,11 +33,11 @@ public class BossZombie : MonoBehaviour
     public float groundPoundKnockback = 10f;
     public GameObject groundPoundEffect;
 
-    [Header("UI & Phase")]
-    public Canvas healthBarCanvas;
-    public Image healthBarFill;
-    public TMP_Text bossNameText;
-    public bool battleStarted = false;
+    [Header("UI - Screen Space (NEW)")]
+    public GameObject bossHealthUI;           // The entire UI panel
+    public Image healthBarFill;               // The fill image
+    public TMP_Text bossNameText;                 // Boss name text
+    public TMP_Text healthText;                   // Optional: "500/500" text
     public bool activateOnStart = false;
 
     [Header("References")]
@@ -47,20 +47,21 @@ public class BossZombie : MonoBehaviour
     public LayerMask playerLayer;
     public AudioSource roarSound;
 
-    private enum State { Idle, Chasing, Attacking, Charging, GroundPound, Dead }
+    public bool battleStarted = false;
+
+    private enum State { Idle, Chasing, Melee, SeismicRoar, GroundPound, Dead }
     private State currentState = State.Idle;
 
     private float lastMeleeTime;
-    private float lastChargeTime;
+    private float lastRoarTime;
     private float lastGroundPoundTime;
-    private bool isCharging = false;
+    
     private bool isEnraged = false;
 
     void Start()
     {
         currentHealth = maxHealth;
 
-        // Auto-find components
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
         
@@ -70,7 +71,6 @@ public class BossZombie : MonoBehaviour
         if (anim == null)
             anim = GetComponent<Animator>();
 
-        // Configure NavMeshAgent
         if (agent != null)
         {
             agent.speed = moveSpeed;
@@ -80,22 +80,21 @@ public class BossZombie : MonoBehaviour
             agent.autoBraking = true;
         }
 
-        // Setup health bar
-        UpdateHealthBar();
+        // Setup UI
         if (bossNameText != null) 
             bossNameText.text = bossName;
+        
+        UpdateHealthBar();
 
-        // Detach health bar so it doesn't rotate with boss
-        if (healthBarCanvas != null)
-            healthBarCanvas.transform.SetParent(null);
+        // Hide UI at start
+        if (bossHealthUI != null)
+            bossHealthUI.SetActive(false);
 
-        // Start inactive unless testing
         if (!activateOnStart)
         {
             battleStarted = false;
             if (agent != null) agent.isStopped = true;
-            if (healthBarCanvas != null) healthBarCanvas.gameObject.SetActive(false);
-            this.enabled = false; // Disable script entirely
+            this.enabled = false;
         }
         else
         {
@@ -110,11 +109,16 @@ public class BossZombie : MonoBehaviour
         battleStarted = true;
         this.enabled = true;
 
+        BossUIAnimator uiAnim = bossHealthUI.GetComponent<BossUIAnimator>();
+    if (uiAnim != null)
+        uiAnim.SlideIn();
+
         if (agent != null) 
             agent.isStopped = false;
 
-        if (healthBarCanvas != null)
-            healthBarCanvas.gameObject.SetActive(true);
+        // Show UI at top of screen
+        if (bossHealthUI != null)
+            bossHealthUI.SetActive(true);
 
         if (roarSound != null) 
             roarSound.Play();
@@ -139,27 +143,17 @@ public class BossZombie : MonoBehaviour
         }
     }
 
-    void LateUpdate()
-    {
-        // Update health bar position (prevents jitter)
-        if (healthBarCanvas != null && currentState != State.Dead && battleStarted)
-        {
-            healthBarCanvas.transform.position = transform.position + Vector3.up * 4f;
-            healthBarCanvas.transform.LookAt(Camera.main.transform);
-            healthBarCanvas.transform.Rotate(0, 180, 0);
-        }
-    }
+    // REMOVED: LateUpdate (no longer needed - UI doesn't follow boss)
 
     void ChasePlayer(float distance)
     {
-        if (isCharging || agent == null || !agent.isOnNavMesh)
+        if (agent == null || !agent.isOnNavMesh)
             return;
 
         currentState = State.Chasing;
         agent.isStopped = false;
         agent.SetDestination(player.position);
 
-        // Update animations based on actual movement
         float velocity = agent.velocity.magnitude;
         
         if (velocity > 0.1f)
@@ -187,9 +181,9 @@ public class BossZombie : MonoBehaviour
         {
             StartGroundPound();
         }
-        else if (distance > meleeRange && distance <= chargeRange && Time.time >= lastChargeTime + chargeCooldown)
+        else if (distance > meleeRange && distance <= seismicRoarRange && Time.time >= lastRoarTime + seismicRoarCooldown)
         {
-            StartCharge();
+            StartSeismicRoar();
         }
         else if (distance <= meleeRange && Time.time >= lastMeleeTime + meleeCooldown)
         {
@@ -199,10 +193,9 @@ public class BossZombie : MonoBehaviour
 
     void StartMelee()
     {
-        currentState = State.Attacking;
+        currentState = State.Melee;
         agent.isStopped = true;
 
-        // Face player
         Vector3 dir = (player.position - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0, dir.z));
 
@@ -229,82 +222,59 @@ public class BossZombie : MonoBehaviour
             if (ph != null)
             {
                 ph.TakeDamage(attackDamage);
-                Debug.Log($"Boss melee: {attackDamage} damage");
-
-                if (CameraShake.Instance != null)
-                    CameraShake.Instance.Shake(0.3f, 0.2f);
+                Debug.Log($"💥 Boss melee: {attackDamage} damage");
             }
         }
     }
 
-    void StartCharge()
+    void StartSeismicRoar()
     {
-        currentState = State.Charging;
+        currentState = State.SeismicRoar;
         agent.isStopped = true;
+        agent.velocity = Vector3.zero;
 
-        if (roarSound != null) roarSound.Play();
-        if (anim != null) anim.SetTrigger("ChargeWindup");
+        Vector3 dir = (player.position - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0, dir.z));
 
-        Invoke(nameof(ExecuteCharge), chargeWindupTime);
-        lastChargeTime = Time.time;
-    }
-
-    void ExecuteCharge()
-    {
-        isCharging = true;
-        
-        if (anim != null) anim.SetBool("Charging", true);
-        if (chargeEffect != null) chargeEffect.Play();
-
-        Vector3 chargeDir = (player.position - transform.position).normalized;
-        transform.rotation = Quaternion.LookRotation(chargeDir);
-
-        // CRITICAL FIX: Disable agent during manual movement
-        if (agent != null) agent.enabled = false;
-
-        StartCoroutine(ChargeMovement(chargeDir));
-    }
-
-    IEnumerator ChargeMovement(Vector3 direction)
-    {
-        float elapsed = 0f;
-
-        while (elapsed < chargeDuration)
+        if (anim != null)
         {
-            // Manual movement
-            transform.position += direction * chargeSpeed * Time.deltaTime;
-
-            // Check collision with player
-            Collider[] hits = Physics.OverlapSphere(transform.position, 1.5f, playerLayer);
-            if (hits.Length > 0)
-            {
-                PlayerHealth ph = hits[0].GetComponent<PlayerHealth>();
-                if (ph != null)
-                {
-                    ph.TakeDamage(attackDamage * 1.5f);
-                    Debug.Log($"Boss charge: {attackDamage * 1.5f} damage");
-
-                    if (CameraShake.Instance != null)
-                        CameraShake.Instance.Shake(0.5f, 0.3f);
-                }
-                break;
-            }
-
-            elapsed += Time.deltaTime;
-            yield return null;
+            anim.SetTrigger("Roar");
+            anim.SetBool("Walking", false);
+            anim.SetBool("Running", false);
         }
 
-        // End charge
-        isCharging = false;
-        if (anim != null) anim.SetBool("Charging", false);
-        if (chargeEffect != null) chargeEffect.Stop();
+        if (roarSound != null)
+            roarSound.Play();
 
-        // CRITICAL FIX: Re-enable agent
-        if (agent != null) agent.enabled = true;
+        Debug.Log("📢 BOSS ROARING! Run away!");
 
-        yield return new WaitForSeconds(0.5f);
+        Invoke(nameof(ExecuteSeismicRoar), roarWindupTime);
 
-        currentState = State.Chasing;
+        lastRoarTime = Time.time;
+    }
+
+    void ExecuteSeismicRoar()
+    {
+        if (roarEffect != null)
+            roarEffect.Play();
+
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+
+        if (distToPlayer <= seismicRoarRange)
+        {
+            PlayerHealth ph = player.GetComponent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(roarDamage);
+                Debug.Log($"🔊 Seismic Roar hit for {roarDamage} damage!");
+            }
+        }
+        else
+        {
+            Debug.Log("Player escaped the roar!");
+        }
+
+        Invoke(nameof(ResetAttack), 1f);
     }
 
     void StartGroundPound()
@@ -312,7 +282,8 @@ public class BossZombie : MonoBehaviour
         currentState = State.GroundPound;
         agent.isStopped = true;
 
-        if (anim != null) anim.SetTrigger("GroundPound");
+        if (anim != null) 
+            anim.SetTrigger("GroundPound");
 
         Invoke(nameof(ExecuteGroundPound), 1f);
         lastGroundPoundTime = Time.time;
@@ -323,7 +294,6 @@ public class BossZombie : MonoBehaviour
         if (groundPoundEffect != null)
             Instantiate(groundPoundEffect, transform.position, Quaternion.identity);
 
-        // Fixed: Only hit player layer
         Collider[] hits = Physics.OverlapSphere(transform.position, groundPoundRadius, playerLayer);
         
         foreach (Collider hit in hits)
@@ -333,7 +303,6 @@ public class BossZombie : MonoBehaviour
             {
                 ph.TakeDamage(groundPoundDamage);
                 
-                // Knockback
                 Vector3 knockDir = (hit.transform.position - transform.position).normalized;
                 CharacterController cc = hit.GetComponent<CharacterController>();
                 if (cc != null)
@@ -341,12 +310,11 @@ public class BossZombie : MonoBehaviour
                     StartCoroutine(ApplyKnockback(cc, knockDir));
                 }
 
-                Debug.Log($"Ground pound: {groundPoundDamage} damage");
+                Debug.Log($"💥 Ground pound: {groundPoundDamage} damage");
             }
         }
-
         if (CameraShake.Instance != null)
-            CameraShake.Instance.Shake(0.8f, 0.5f);
+        CameraShake.Instance.Shake(0.8f, 0.5f); 
 
         Invoke(nameof(ResetAttack), 2f);
     }
@@ -379,7 +347,6 @@ public class BossZombie : MonoBehaviour
 
         UpdateHealthBar();
 
-        // Enrage at 50%
         if (!isEnraged && currentHealth <= maxHealth * 0.5f)
         {
             EnterEnragedMode();
@@ -406,10 +373,15 @@ public class BossZombie : MonoBehaviour
         moveSpeed *= 1.5f;
         if (agent != null) agent.speed = moveSpeed;
 
-        lastChargeTime = 0;
+        lastMeleeTime = 0;
+        lastRoarTime = 0;
         lastGroundPoundTime = 0;
 
         if (roarSound != null) roarSound.Play();
+        
+        // Optional: Change boss name text
+        if (bossNameText != null)
+            bossNameText.text = bossName + " - ENRAGED";
     }
 
     void UpdateHealthBar()
@@ -418,6 +390,7 @@ public class BossZombie : MonoBehaviour
         {
             healthBarFill.fillAmount = currentHealth / maxHealth;
 
+            // Color changes based on health
             if (!isEnraged)
             {
                 if (currentHealth > maxHealth * 0.6f)
@@ -431,6 +404,12 @@ public class BossZombie : MonoBehaviour
             {
                 healthBarFill.color = Color.red;
             }
+        }
+
+        // Update health text (optional)
+        if (healthText != null)
+        {
+            healthText.text = $"{(int)currentHealth} / {(int)maxHealth}";
         }
     }
 
@@ -456,20 +435,42 @@ public class BossZombie : MonoBehaviour
             anim.SetBool("Attacking", false);
         }
 
-        if (healthBarCanvas != null)
-            healthBarCanvas.gameObject.SetActive(false);
+        // Hide UI when boss dies
+        if (bossHealthUI != null)
+        {
+            StartCoroutine(FadeOutUI());
+        }
 
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
 
         Debug.Log("💀 BOSS DEFEATED!");
 
-        // Stop zombie spawning
         ZombieSpawner spawner = FindObjectOfType<ZombieSpawner>();
         if (spawner != null) spawner.StopSpawning();
 
         Destroy(gameObject, 5f);
         this.enabled = false;
+    }
+
+    // Optional: Smooth fade out when boss dies
+    IEnumerator FadeOutUI()
+    {
+        CanvasGroup cg = bossHealthUI.GetComponent<CanvasGroup>();
+        if (cg == null)
+            cg = bossHealthUI.AddComponent<CanvasGroup>();
+
+        float duration = 2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            cg.alpha = 1f - (elapsed / duration);
+            yield return null;
+        }
+
+        bossHealthUI.SetActive(false);
     }
 
     void OnDrawGizmosSelected()
@@ -478,7 +479,7 @@ public class BossZombie : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, meleeRange);
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, chargeRange);
+        Gizmos.DrawWireSphere(transform.position, seismicRoarRange);
 
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, groundPoundRadius);
