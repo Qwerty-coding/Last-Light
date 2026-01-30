@@ -673,7 +673,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4553356443499292, guid: 36652662aaef2458cbf81dd2079493a6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.06735709
+      value: -0.064348154
       objectReference: {fileID: 0}
     - target: {fileID: 4553356443499292, guid: 36652662aaef2458cbf81dd2079493a6, type: 3}
       propertyPath: m_LocalPosition.y
@@ -681,7 +681,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4553356443499292, guid: 36652662aaef2458cbf81dd2079493a6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.44547853
+      value: 0.36849055
       objectReference: {fileID: 0}
     - target: {fileID: 4553356443499292, guid: 36652662aaef2458cbf81dd2079493a6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2698,6 +2698,7 @@ GameObject:
   - component: {fileID: 159337709}
   - component: {fileID: 159337711}
   - component: {fileID: 159337712}
+  - component: {fileID: 159337713}
   m_Layer: 0
   m_Name: tempaxe
   m_TagString: Untagged
@@ -2722,9 +2723,9 @@ Transform:
   m_GameObject: {fileID: 159337703}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.011031305, z: 0, w: -0.99993914}
-  m_LocalPosition: {x: 0.116364606, y: 1.1971632, z: -0.10505306}
-  m_LocalScale: {x: 1.4207666, y: 1.4207662, z: 1.4207666}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: -0.004, y: 1.1971632, z: -0.292}
+  m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 546496392}
   m_Father: {fileID: 1686850550}
@@ -2766,6 +2767,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.74194217, y: 0.10096643, z: 0.21632531}
   m_Center: {x: 0.008606409, y: -0.020627834, z: 0.010540738}
+--- !u!114 &159337713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159337703}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2ad96fbd6da23d4cb12d94acec23a42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &164134763
 GameObject:
   m_ObjectHideFlags: 0
@@ -10532,7 +10545,7 @@ MonoBehaviour:
   bossHealthUI: {fileID: 1646883770}
   healthBarFill: {fileID: 985968478}
   bossNameText: {fileID: 846185625}
-  healthText: {fileID: 0}
+  healthText: {fileID: 846185625}
   activateOnStart: 0
   player: {fileID: 1926322348}
   agent: {fileID: 356480938}
@@ -12260,12 +12273,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 516304602}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 557.919, y: 2.0367002, z: 271.9}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 325.08032, y: 3.2328577, z: -6908.0957}
+  m_LocalScale: {x: 1.5873016, y: 1.5873016, z: 1.5873016}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 827305749}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &518528580 stripped
 GameObject:
@@ -18267,6 +18280,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 577842334}
+  - component: {fileID: 577842335}
   m_Layer: 0
   m_Name: WeaponHandler
   m_TagString: Untagged
@@ -18289,6 +18303,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &577842335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 577842333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 972cd7a2538ddce4999e1fb8a0789792, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gunParent: {fileID: 1859501077}
+  axeParent: {fileID: 209978414}
+  startWithAxe: 0
+  startWithGun: 0
 --- !u!1001 &594854667
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20185,6 +20215,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1844233955}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 516304604}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
       insertIndex: -1
@@ -40893,7 +40926,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1164328234615206, guid: cdebefa9cede542489ec77a0e0261343, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4045817768345548, guid: cdebefa9cede542489ec77a0e0261343, type: 3}
       propertyPath: m_LocalScale.x
@@ -62189,6 +62222,7 @@ MonoBehaviour:
   itemCostName: Logs
   costAmount: 10
   itemRewardName: Gun
+  weaponHandler: {fileID: 0}
 --- !u!1 &1895296064 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8557342179557046947, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
@@ -62762,6 +62796,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gunParent: {fileID: 1635615192}
   axeParent: {fileID: 0}
+  startWithAxe: 1
+  startWithGun: 0
 --- !u!114 &1926322354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92556,6 +92592,5 @@ SceneRoots:
   - {fileID: 1129387656}
   - {fileID: 1605558804}
   - {fileID: 612845666}
-  - {fileID: 516304604}
   - {fileID: 594854667}
   - {fileID: 356480932}
