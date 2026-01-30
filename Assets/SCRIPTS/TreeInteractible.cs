@@ -28,18 +28,31 @@ public class TreeInteractable : MonoBehaviour
 
     private void DropLogs()
     {
-        if (logPrefab != null)
+        if (logPrefab == null) return;
+
+        for (int i = 0; i < logAmount; i++)
         {
-            for (int i = 0; i < logAmount; i++)
+            // Start ray slightly above the tree
+            Vector3 rayStart = transform.position + Vector3.up * 2f;
+
+            // Small random spread (optional)
+            rayStart += new Vector3(
+                Random.Range(-0.5f, 0.5f),
+                0,
+                Random.Range(-0.5f, 0.5f)
+            );
+
+            RaycastHit hit;
+
+            // Raycast straight down
+            if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f))
             {
-                // Spawns log slightly above the ground
-                Vector3 spawnPos = transform.position + new Vector3(0, 1f, 0);
-                
-                // Keep the random spread in case you decide to increase it later
-                spawnPos += new Vector3(Random.Range(-0.2f, 0.2f), 0, Random.Range(-0.2f, 0.2f));
+                // Place log on the ground
+                Vector3 spawnPos = hit.point;
 
                 Instantiate(logPrefab, spawnPos, Quaternion.identity);
             }
         }
     }
+
 }
