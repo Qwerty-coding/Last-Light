@@ -146,10 +146,10 @@ public class WeaponHandler : MonoBehaviour
         {
             axeParent.SetActive(true);
         }
-        else
-        {
-            Debug.LogError("Axe Parent is not assigned in Inspector!");
-        }
+        // else
+        // {
+        //     Debug.LogError("Axe Parent is not assigned in Inspector!");
+        // }
         
         // Disable gun (only one weapon at a time)
         if (gunParent != null)
@@ -160,7 +160,7 @@ public class WeaponHandler : MonoBehaviour
     
     private void HideAllWeapons()
     {
-        Debug.Log("Hiding all weapons");
+        // Debug.Log("Hiding all weapons");
         
         if (gunParent != null)
         {
