@@ -51,6 +51,11 @@ public class Zombie1 : MonoBehaviour
         zombieAgent = GetComponent<NavMeshAgent>();
         if (playerTransform == null) playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
         
+        if (zombieAgent != null && zombieAgent.isOnNavMesh)
+    {
+        zombieAgent.Warp(transform.position); 
+    }
+    
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
         
         // --- AUDIO SETUP ---
@@ -207,7 +212,7 @@ public class Zombie1 : MonoBehaviour
         countedAsDead = true;
 
         // If you have an objective manager
-        // if (ObjectiveManager.Instance != null) ObjectiveManager.Instance.OnZombieKilled();
+        if (ObjectiveManager.Instance != null) ObjectiveManager.Instance.OnZombieKilled();
 
         // --- DEATH AUDIO LOGIC ---
         if (audioSource != null)

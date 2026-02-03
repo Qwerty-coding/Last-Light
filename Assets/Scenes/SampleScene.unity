@@ -2667,7 +2667,7 @@ Transform:
   m_GameObject: {fileID: 154537293}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -18.799995, y: 1.211322, z: 15.200012}
+  m_LocalPosition: {x: 389, y: 1.211322, z: 15.200012}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10936,8 +10936,8 @@ MonoBehaviour:
   bossNameText: {fileID: 846185625}
   healthText: {fileID: 846185625}
   activateOnStart: 0
-  victoryManager: {fileID: 910521661}
-  delayBeforeVictory: 2
+  victoryManager: {fileID: 0}
+  delayBeforeVictory: 4
   player: {fileID: 1926322348}
   agent: {fileID: 356480938}
   anim: {fileID: 356480940}
@@ -25642,7 +25642,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b614c30d64062a84d9d63572a946e06e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  victoryPanel: {fileID: 1743021321}
+  victoryPanel: {fileID: 0}
 --- !u!4 &910521662
 Transform:
   m_ObjectHideFlags: 0
@@ -71109,7 +71109,7 @@ MonoBehaviour:
   giveDamage: 10
   health: 100
   zombieAgent: {fileID: 2089997059}
-  playerTransform: {fileID: 0}
+  playerTransform: {fileID: 1926322348}
   AttackingRaycastArea: {fileID: 1298884466}
   PlayerLayer:
     serializedVersion: 2
@@ -71203,7 +71203,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a83d9b13f8ba3f43bae88d0a984736a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anim: {fileID: 0}
+  anim: {fileID: 2089997063}
   HP: 100
 --- !u!82 &2089997065
 AudioSource:
