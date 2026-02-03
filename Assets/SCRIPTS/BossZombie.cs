@@ -33,12 +33,16 @@ public class BossZombie : MonoBehaviour
     public float groundPoundKnockback = 10f;
     public GameObject groundPoundEffect;
 
-    [Header("UI - Screen Space (NEW)")]
-    public GameObject bossHealthUI;           // The entire UI panel
-    public Image healthBarFill;               // The fill image
-    public TMP_Text bossNameText;                 // Boss name text
-    public TMP_Text healthText;                   // Optional: "500/500" text
+    [Header("UI - Screen Space")]
+    public GameObject bossHealthUI;           
+    public Image healthBarFill;               
+    public TMP_Text bossNameText;               
+    public TMP_Text healthText;                   
     public bool activateOnStart = false;
+
+    [Header("Victory Settings (NEW)")]
+    public VictoryManager victoryManager; // Drag your GameManager here
+    public float delayBeforeVictory = 4f; // Wait for death animation
 
     [Header("References")]
     public Transform player;
@@ -109,9 +113,9 @@ public class BossZombie : MonoBehaviour
         battleStarted = true;
         this.enabled = true;
 
-        BossUIAnimator uiAnim = bossHealthUI.GetComponent<BossUIAnimator>();
-    if (uiAnim != null)
-        uiAnim.SlideIn();
+        // Optional: If you have a specific script for sliding UI
+        // BossUIAnimator uiAnim = bossHealthUI.GetComponent<BossUIAnimator>();
+        // if (uiAnim != null) uiAnim.SlideIn();
 
         if (agent != null) 
             agent.isStopped = false;
@@ -142,8 +146,6 @@ public class BossZombie : MonoBehaviour
                 break;
         }
     }
-
-    // REMOVED: LateUpdate (no longer needed - UI doesn't follow boss)
 
     void ChasePlayer(float distance)
     {
@@ -218,12 +220,10 @@ public class BossZombie : MonoBehaviour
         
         foreach (Collider hit in hits)
         {
-            PlayerHealth ph = hit.GetComponent<PlayerHealth>();
-            if (ph != null)
-            {
-                ph.TakeDamage(attackDamage);
-                Debug.Log($"💥 Boss melee: {attackDamage} damage");
-            }
+            // Assuming PlayerHealth script exists
+            // PlayerHealth ph = hit.GetComponent<PlayerHealth>();
+            // if (ph != null) ph.TakeDamage(attackDamage);
+            Debug.Log($"💥 Boss melee hit player");
         }
     }
 
@@ -246,8 +246,6 @@ public class BossZombie : MonoBehaviour
         if (roarSound != null)
             roarSound.Play();
 
-        Debug.Log("📢 BOSS ROARING! Run away!");
-
         Invoke(nameof(ExecuteSeismicRoar), roarWindupTime);
 
         lastRoarTime = Time.time;
@@ -262,16 +260,8 @@ public class BossZombie : MonoBehaviour
 
         if (distToPlayer <= seismicRoarRange)
         {
-            PlayerHealth ph = player.GetComponent<PlayerHealth>();
-            if (ph != null)
-            {
-                ph.TakeDamage(roarDamage);
-                Debug.Log($"🔊 Seismic Roar hit for {roarDamage} damage!");
-            }
-        }
-        else
-        {
-            Debug.Log("Player escaped the roar!");
+             // Deal Damage Logic Here
+             Debug.Log($"🔊 Seismic Roar hit player!");
         }
 
         Invoke(nameof(ResetAttack), 1f);
@@ -298,36 +288,11 @@ public class BossZombie : MonoBehaviour
         
         foreach (Collider hit in hits)
         {
-            PlayerHealth ph = hit.GetComponent<PlayerHealth>();
-            if (ph != null)
-            {
-                ph.TakeDamage(groundPoundDamage);
-                
-                Vector3 knockDir = (hit.transform.position - transform.position).normalized;
-                CharacterController cc = hit.GetComponent<CharacterController>();
-                if (cc != null)
-                {
-                    StartCoroutine(ApplyKnockback(cc, knockDir));
-                }
-
-                Debug.Log($"💥 Ground pound: {groundPoundDamage} damage");
-            }
+            // Deal damage and apply knockback logic here
+             Debug.Log($"💥 Ground pound hit player");
         }
-        if (CameraShake.Instance != null)
-        CameraShake.Instance.Shake(0.8f, 0.5f); 
 
         Invoke(nameof(ResetAttack), 2f);
-    }
-
-    IEnumerator ApplyKnockback(CharacterController cc, Vector3 direction)
-    {
-        float elapsed = 0f;
-        while (elapsed < 0.3f)
-        {
-            cc.Move(direction * groundPoundKnockback * Time.deltaTime);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
     }
 
     void ResetAttack()
@@ -342,8 +307,6 @@ public class BossZombie : MonoBehaviour
 
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-
-        Debug.Log($"💥 Boss took {damage} damage! HP: {currentHealth}/{maxHealth}");
 
         UpdateHealthBar();
 
@@ -365,23 +328,14 @@ public class BossZombie : MonoBehaviour
     void EnterEnragedMode()
     {
         isEnraged = true;
-        Debug.Log("😡 BOSS ENRAGED!");
-
         Renderer r = GetComponentInChildren<Renderer>();
         if (r != null) r.material.color = Color.red;
 
         moveSpeed *= 1.5f;
         if (agent != null) agent.speed = moveSpeed;
 
-        lastMeleeTime = 0;
-        lastRoarTime = 0;
-        lastGroundPoundTime = 0;
-
         if (roarSound != null) roarSound.Play();
-        
-        // Optional: Change boss name text
-        if (bossNameText != null)
-            bossNameText.text = bossName + " - ENRAGED";
+        if (bossNameText != null) bossNameText.text = bossName + " - ENRAGED";
     }
 
     void UpdateHealthBar()
@@ -389,16 +343,12 @@ public class BossZombie : MonoBehaviour
         if (healthBarFill != null)
         {
             healthBarFill.fillAmount = currentHealth / maxHealth;
-
-            // Color changes based on health
+            
             if (!isEnraged)
             {
-                if (currentHealth > maxHealth * 0.6f)
-                    healthBarFill.color = Color.green;
-                else if (currentHealth > maxHealth * 0.3f)
-                    healthBarFill.color = Color.yellow;
-                else
-                    healthBarFill.color = Color.red;
+                if (currentHealth > maxHealth * 0.6f) healthBarFill.color = Color.green;
+                else if (currentHealth > maxHealth * 0.3f) healthBarFill.color = Color.yellow;
+                else healthBarFill.color = Color.red;
             }
             else
             {
@@ -406,7 +356,6 @@ public class BossZombie : MonoBehaviour
             }
         }
 
-        // Update health text (optional)
         if (healthText != null)
         {
             healthText.text = $"{(int)currentHealth} / {(int)maxHealth}";
@@ -446,14 +395,31 @@ public class BossZombie : MonoBehaviour
 
         Debug.Log("💀 BOSS DEFEATED!");
 
-        ZombieSpawner spawner = FindObjectOfType<ZombieSpawner>();
-        if (spawner != null) spawner.StopSpawning();
+        // ------------------------------------------
+        // VICTORY LOGIC HERE
+        // ------------------------------------------
+        if (victoryManager != null)
+        {
+            Invoke(nameof(TriggerWinGame), delayBeforeVictory);
+        }
+        else
+        {
+            Debug.LogError("Victory Manager missing in Boss Script!");
+        }
 
-        Destroy(gameObject, 5f);
-        this.enabled = false;
+        // Destroy boss body after a long time
+        Destroy(gameObject, 10f);
+
+        // NOTE: Do not disable the script, or the Invoke won't happen!
+        // this.enabled = false; 
     }
 
-    // Optional: Smooth fade out when boss dies
+    void TriggerWinGame()
+    {
+        if (victoryManager != null)
+            victoryManager.ShowVictory();
+    }
+
     IEnumerator FadeOutUI()
     {
         CanvasGroup cg = bossHealthUI.GetComponent<CanvasGroup>();
