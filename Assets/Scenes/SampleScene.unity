@@ -10936,8 +10936,8 @@ MonoBehaviour:
   bossNameText: {fileID: 846185625}
   healthText: {fileID: 846185625}
   activateOnStart: 0
-  victoryManager: {fileID: 0}
-  delayBeforeVictory: 4
+  victoryManager: {fileID: 910521661}
+  delayBeforeVictory: 2
   player: {fileID: 1926322348}
   agent: {fileID: 356480938}
   anim: {fileID: 356480940}
@@ -25642,7 +25642,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b614c30d64062a84d9d63572a946e06e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  victoryPanel: {fileID: 0}
+  victoryPanel: {fileID: 1743021321}
 --- !u!4 &910521662
 Transform:
   m_ObjectHideFlags: 0
