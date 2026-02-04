@@ -11,53 +11,48 @@ public class ObjectiveManager : MonoBehaviour
     public CanvasGroup trackerCanvasGroup;
 
     [Header("Popup UI References")]
-    public CanvasGroup popupCanvasGroup; // Drag your 'ObjectivePopupText' object here
-    public float popupDuration = 2f;     // How long the popup stays visible
+    public CanvasGroup popupCanvasGroup;
+    public float popupDuration = 2f;
 
     [Header("Settings")]
     public int woodRequired = 10;
-    public int zombiesRequired = 3;
+    public int zombiesRequired = 10; // 1. Zombie count is 10
 
     private int currentWood = 0;
     private int zombiesKilled = 0;
+    private bool keyGiven = false;
 
     void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        if (trackerText != null)
-            trackerText.text = "";
-            
-        // Ensure popup is invisible at start
-        if (popupCanvasGroup != null)
-            popupCanvasGroup.alpha = 0;
+        if (trackerText != null) trackerText.text = "";
+        if (popupCanvasGroup != null) popupCanvasGroup.alpha = 0;
     }
 
-    // Needed by IntroSequence
     public void StartGameLoop()
     {
         UpdateObjective("Exit the house from the main gate");
     }
 
-    public void ForceWoodObjectiveUI()
-    {
-        if (trackerText == null) return;
-        trackerText.text = "- Gather Wood (0/" + woodRequired + ")";
-    }
-
+    // --- WOOD LOGIC ---
     public void StartWoodObjective()
     {
         currentWood = 0;
         ForceWoodObjectiveUI();
     }
 
+    public void ForceWoodObjectiveUI()
+    {
+        if (trackerText != null)
+            trackerText.text = "- Gather Wood (0/" + woodRequired + ")";
+    }
+
     public void AddWood()
     {
         currentWood++;
-
-        if (currentWood > woodRequired)
-            currentWood = woodRequired;
+        if (currentWood > woodRequired) currentWood = woodRequired;
 
         trackerText.text = "- Gather Wood (" + currentWood + "/" + woodRequired + ")";
 
@@ -67,76 +62,75 @@ public class ObjectiveManager : MonoBehaviour
         }
     }
 
+    // --- ZOMBIE LOGIC ---
+    public void StartZombieObjective()
+    {
+        zombiesKilled = 0;
+        keyGiven = false;
+        
+        // 2. Immediate UI update for 10 zombies
+        trackerText.text = "- Kill Zombies (0/" + zombiesRequired + ")";
+        UpdateObjective("Kill " + zombiesRequired + " Zombies to find the Key");
+    }
+
     public void OnZombieKilled()
     {
-        zombiesKilled++;
+        if (keyGiven) return;
 
+        zombiesKilled++;
         trackerText.text = "- Kill Zombies (" + zombiesKilled + "/" + zombiesRequired + ")";
 
         if (zombiesKilled >= zombiesRequired)
         {
-            if (SimpleInventory.Instance != null)
-                SimpleInventory.Instance.AddItem("Key", 1);
+            keyGiven = true;
+            if (SimpleInventory.Instance != null) SimpleInventory.Instance.AddItem("Key", 1);
             
+            // This leads the player to the Fire Tower
             UpdateObjective("Key Found! Find the Fire Tower and reach the top");
         }
     }
 
-    public void UpdateObjective(string newText)
-    {
-        // Stop any currently running fades so they don't clash
-        StopAllCoroutines();
-        
-        // 1. Update the side tracker
-        StartCoroutine(FadeObjective(newText));
+    // --- PORTAL & BOSS LOGIC ---
 
-        // 2. Show the "Objective Updated" Popup
-        if (popupCanvasGroup != null)
-        {
-            StartCoroutine(ShowPopup());
-        }
+    // Call this when player reaches the top of the Fire Tower (Trigger)
+    public void StartPortalObjective()
+    {
+        trackerText.text = "- Enter the Portal";
+        UpdateObjective("Enter the Portal");
     }
 
-    // --- COROUTINES ---
+    // Call this when player steps on the 'Sender' object
+    public void StartBossObjective()
+    {
+        trackerText.text = "- Kill the Boss";
+        UpdateObjective("Fight and kill The Boss Zombie");
+    }
+
+    // --- UI HELPERS ---
+    public void UpdateObjective(string newText)
+    {
+        StopAllCoroutines();
+        StartCoroutine(FadeObjective(newText));
+        if (popupCanvasGroup != null) StartCoroutine(ShowPopup());
+    }
 
     IEnumerator FadeObjective(string text)
     {
         trackerCanvasGroup.alpha = 0;
         trackerText.text = "- " + text;
-
         float t = 0f;
-        while (t < 1f)
-        {
-            t += Time.deltaTime;
-            trackerCanvasGroup.alpha = t;
-            yield return null;
-        }
+        while (t < 1f) { t += Time.deltaTime; trackerCanvasGroup.alpha = t; yield return null; }
         trackerCanvasGroup.alpha = 1f;
     }
 
     IEnumerator ShowPopup()
     {
-        // 1. Fade In
         float t = 0f;
-        while (t < 1f)
-        {
-            t += Time.deltaTime * 3f; // Multiply speed to fade in fast
-            popupCanvasGroup.alpha = t;
-            yield return null;
-        }
+        while (t < 1f) { t += Time.deltaTime * 3f; popupCanvasGroup.alpha = t; yield return null; }
         popupCanvasGroup.alpha = 1f;
-
-        // 2. Wait
         yield return new WaitForSeconds(popupDuration);
-
-        // 3. Fade Out
         t = 1f;
-        while (t > 0f)
-        {
-            t -= Time.deltaTime; // Fade out slower
-            popupCanvasGroup.alpha = t;
-            yield return null;
-        }
+        while (t > 0f) { t -= Time.deltaTime; popupCanvasGroup.alpha = t; yield return null; }
         popupCanvasGroup.alpha = 0f;
     }
 }

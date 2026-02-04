@@ -25383,7 +25383,7 @@ MonoBehaviour:
   popupCanvasGroup: {fileID: 99846834}
   popupDuration: 2
   woodRequired: 10
-  zombiesRequired: 3
+  zombiesRequired: 10
 --- !u!4 &978584175
 Transform:
   m_ObjectHideFlags: 0
@@ -30557,6 +30557,7 @@ GameObject:
   - component: {fileID: 1011486533}
   - component: {fileID: 1011486532}
   - component: {fileID: 1011486536}
+  - component: {fileID: 1011486537}
   m_Layer: 0
   m_Name: sender
   m_TagString: Untagged
@@ -30573,7 +30574,7 @@ Transform:
   m_GameObject: {fileID: 1011486530}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -22.869995, y: -27, z: 1930.8}
+  m_LocalPosition: {x: -238.72, y: 9.8, z: 2421.84}
   m_LocalScale: {x: 1.8, y: 0.17999999, z: 1.8}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -30682,6 +30683,18 @@ MonoBehaviour:
   bossScript: {fileID: 356480939}
   turnOffFog: 1
   skyboxChange: {fileID: 0}
+--- !u!114 &1011486537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1011486530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0749fb743a75e624c94ad421beddd189, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1022584769
 GameObject:
   m_ObjectHideFlags: 0
@@ -30712,7 +30725,7 @@ Transform:
   m_GameObject: {fileID: 1022584769}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.95, y: -0.47, z: 0}
+  m_LocalPosition: {x: 8.95, y: -2.99, z: 0}
   m_LocalScale: {x: 9, y: 9, z: 9}
   m_ConstrainProportionsScale: 1
   m_Children: []
