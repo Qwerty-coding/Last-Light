@@ -87,6 +87,14 @@ public class WeaponSwing : MonoBehaviour
             {
                 zombie.TakeDamage(damageToZombie);
             }
+            else 
+            {
+                BossZombie boss = hit.collider.GetComponent<BossZombie>();
+                if (boss != null)
+                {
+                    boss.TakeDamage(damageToZombie);
+                }
+            }
         }
     }
 }

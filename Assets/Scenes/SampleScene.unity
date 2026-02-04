@@ -10889,7 +10889,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 356480933}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.36
   m_Speed: 3
   m_Acceleration: 8
   avoidancePriority: 50
@@ -10898,7 +10898,7 @@ NavMeshAgent:
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
-  m_Height: 2
+  m_Height: 1.99
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 1
@@ -10916,7 +10916,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bossName: SWC
   maxHealth: 500
-  moveSpeed: 3
+  moveSpeed: 20
   attackDamage: 25
   meleeRange: 3
   seismicRoarRange: 12
@@ -10924,6 +10924,7 @@ MonoBehaviour:
   meleeCooldown: 2
   seismicRoarCooldown: 8
   groundPoundCooldown: 12
+  warningCirclePrefab: {fileID: 2684929836402974591, guid: e280c381c9969fa4a801e0dd64fc967a, type: 3}
   roarDamage: 35
   roarWindupTime: 3.2
   roarEffect: {fileID: 0}

@@ -22,6 +22,9 @@ public class BossZombie : MonoBehaviour
     public float seismicRoarCooldown = 8f;
     public float groundPoundCooldown = 12f;
 
+    [Header("Visual Indicators (NEW)")]
+    public GameObject warningCirclePrefab; // Drag a Red Circle Prefab here!
+
     [Header("Seismic Roar Attack")]
     public float roarDamage = 35f;
     public float roarWindupTime = 1.2f;
@@ -40,9 +43,9 @@ public class BossZombie : MonoBehaviour
     public TMP_Text healthText;                   
     public bool activateOnStart = false;
 
-    [Header("Victory Settings (NEW)")]
-    public VictoryManager victoryManager; // Drag your GameManager here
-    public float delayBeforeVictory = 4f; // Wait for death animation
+    [Header("Victory Settings")]
+    public VictoryManager victoryManager;
+    public float delayBeforeVictory = 4f;
 
     [Header("References")]
     public Transform player;
@@ -84,13 +87,11 @@ public class BossZombie : MonoBehaviour
             agent.autoBraking = true;
         }
 
-        // Setup UI
         if (bossNameText != null) 
             bossNameText.text = bossName;
         
         UpdateHealthBar();
 
-        // Hide UI at start
         if (bossHealthUI != null)
             bossHealthUI.SetActive(false);
 
@@ -113,14 +114,9 @@ public class BossZombie : MonoBehaviour
         battleStarted = true;
         this.enabled = true;
 
-        // Optional: If you have a specific script for sliding UI
-        // BossUIAnimator uiAnim = bossHealthUI.GetComponent<BossUIAnimator>();
-        // if (uiAnim != null) uiAnim.SlideIn();
-
         if (agent != null) 
             agent.isStopped = false;
 
-        // Show UI at top of screen
         if (bossHealthUI != null)
             bossHealthUI.SetActive(true);
 
@@ -134,6 +130,8 @@ public class BossZombie : MonoBehaviour
     {
         if (!battleStarted || currentState == State.Dead || player == null)
             return;
+
+            if (!isEnraged) agent.speed = moveSpeed;
 
         float distToPlayer = Vector3.Distance(transform.position, player.position);
 
@@ -193,6 +191,7 @@ public class BossZombie : MonoBehaviour
         }
     }
 
+    // ==================== MELEE ATTACK ====================
     void StartMelee()
     {
         currentState = State.Melee;
@@ -216,17 +215,21 @@ public class BossZombie : MonoBehaviour
 
     public void DealMeleeDamage()
     {
+        // FIX: Damage is now UNCOMMENTED and working
         Collider[] hits = Physics.OverlapSphere(transform.position + transform.forward * 1.5f, 1.5f, playerLayer);
         
         foreach (Collider hit in hits)
         {
-            // Assuming PlayerHealth script exists
-            // PlayerHealth ph = hit.GetComponent<PlayerHealth>();
-            // if (ph != null) ph.TakeDamage(attackDamage);
-            Debug.Log($"💥 Boss melee hit player");
+            PlayerHealth ph = hit.GetComponent<PlayerHealth>();
+            if (ph != null) 
+            {
+                ph.TakeDamage(attackDamage);
+                Debug.Log("💥 Boss Melee hit player!");
+            }
         }
     }
 
+    // ==================== SEISMIC ROAR ====================
     void StartSeismicRoar()
     {
         currentState = State.SeismicRoar;
@@ -246,6 +249,9 @@ public class BossZombie : MonoBehaviour
         if (roarSound != null)
             roarSound.Play();
 
+        // NEW: Show Red Warning Circle
+        ShowAttackIndicator(seismicRoarRange, roarWindupTime);
+
         Invoke(nameof(ExecuteSeismicRoar), roarWindupTime);
 
         lastRoarTime = Time.time;
@@ -258,15 +264,25 @@ public class BossZombie : MonoBehaviour
 
         float distToPlayer = Vector3.Distance(transform.position, player.position);
 
+        // FIX: Damage Logic Restored
         if (distToPlayer <= seismicRoarRange)
         {
-             // Deal Damage Logic Here
-             Debug.Log($"🔊 Seismic Roar hit player!");
+            PlayerHealth ph = player.GetComponent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(roarDamage);
+                Debug.Log($"🔊 Seismic Roar HIT for {roarDamage} damage!");
+                
+                // Optional: Shake camera
+                if (CameraShake.Instance != null) 
+                    CameraShake.Instance.Shake(0.5f, 0.5f);
+            }
         }
 
         Invoke(nameof(ResetAttack), 1f);
     }
 
+    // ==================== GROUND POUND ====================
     void StartGroundPound()
     {
         currentState = State.GroundPound;
@@ -275,7 +291,10 @@ public class BossZombie : MonoBehaviour
         if (anim != null) 
             anim.SetTrigger("GroundPound");
 
-        Invoke(nameof(ExecuteGroundPound), 1f);
+        // NEW: Show Red Warning Circle (Smaller, but faster)
+        ShowAttackIndicator(groundPoundRadius, 1.0f);
+
+        Invoke(nameof(ExecuteGroundPound), 1.0f);
         lastGroundPoundTime = Time.time;
     }
 
@@ -286,13 +305,60 @@ public class BossZombie : MonoBehaviour
 
         Collider[] hits = Physics.OverlapSphere(transform.position, groundPoundRadius, playerLayer);
         
+        // FIX: Damage Logic Restored
         foreach (Collider hit in hits)
         {
-            // Deal damage and apply knockback logic here
-             Debug.Log($"💥 Ground pound hit player");
+            PlayerHealth ph = hit.GetComponent<PlayerHealth>();
+            if (ph != null)
+            {
+                ph.TakeDamage(groundPoundDamage);
+                Debug.Log($"💥 Ground Pound HIT for {groundPoundDamage} damage!");
+
+                // Knockback
+                CharacterController cc = hit.GetComponent<CharacterController>();
+                if (cc != null)
+                {
+                    Vector3 knockDir = (hit.transform.position - transform.position).normalized;
+                    StartCoroutine(ApplyKnockback(cc, knockDir));
+                }
+            }
         }
+        
+        if (CameraShake.Instance != null) 
+            CameraShake.Instance.Shake(0.8f, 1.0f); // Stronger shake for pound
 
         Invoke(nameof(ResetAttack), 2f);
+    }
+
+    IEnumerator ApplyKnockback(CharacterController cc, Vector3 direction)
+    {
+        float elapsed = 0f;
+        while (elapsed < 0.2f)
+        {
+            cc.Move(direction * groundPoundKnockback * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    // ==================== VISUAL INDICATOR SYSTEM (NEW) ====================
+    void ShowAttackIndicator(float radius, float duration)
+    {
+        if (warningCirclePrefab == null) return;
+
+        // Spawn the circle slightly above ground to avoid Z-fighting
+        Vector3 spawnPos = transform.position + Vector3.up * 0.1f;
+        GameObject indicator = Instantiate(warningCirclePrefab, spawnPos, Quaternion.identity);
+        
+        // Scale it to match the radius (Diameter = Radius * 2)
+        // Note: Assuming the prefab is a 1x1 unit circle/quad
+        indicator.transform.localScale = new Vector3(radius * 2, radius * 2, 1f);
+        
+        // Make it lie flat on the ground (Rotate 90 on X)
+        indicator.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+        // Destroy it after the windup time
+        Destroy(indicator, duration);
     }
 
     void ResetAttack()
@@ -384,10 +450,9 @@ public class BossZombie : MonoBehaviour
             anim.SetBool("Attacking", false);
         }
 
-        // Hide UI when boss dies
         if (bossHealthUI != null)
         {
-            StartCoroutine(FadeOutUI());
+            bossHealthUI.SetActive(false);
         }
 
         Collider col = GetComponent<Collider>();
@@ -395,48 +460,18 @@ public class BossZombie : MonoBehaviour
 
         Debug.Log("💀 BOSS DEFEATED!");
 
-        // ------------------------------------------
-        // VICTORY LOGIC HERE
-        // ------------------------------------------
         if (victoryManager != null)
         {
             Invoke(nameof(TriggerWinGame), delayBeforeVictory);
         }
-        else
-        {
-            Debug.LogError("Victory Manager missing in Boss Script!");
-        }
 
-        // Destroy boss body after a long time
         Destroy(gameObject, 10f);
-
-        // NOTE: Do not disable the script, or the Invoke won't happen!
-        // this.enabled = false; 
     }
 
     void TriggerWinGame()
     {
         if (victoryManager != null)
             victoryManager.ShowVictory();
-    }
-
-    IEnumerator FadeOutUI()
-    {
-        CanvasGroup cg = bossHealthUI.GetComponent<CanvasGroup>();
-        if (cg == null)
-            cg = bossHealthUI.AddComponent<CanvasGroup>();
-
-        float duration = 2f;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            cg.alpha = 1f - (elapsed / duration);
-            yield return null;
-        }
-
-        bossHealthUI.SetActive(false);
     }
 
     void OnDrawGizmosSelected()
