@@ -30697,7 +30697,7 @@ GameObject:
   - component: {fileID: 1022584772}
   - component: {fileID: 1022584771}
   m_Layer: 0
-  m_Name: Log1 (2)
+  m_Name: 'Main Log '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
