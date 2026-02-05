@@ -16,7 +16,8 @@ public class ObjectiveManager : MonoBehaviour
 
     [Header("Settings")]
     public int woodRequired = 10;
-    public int zombiesRequired = 10; // 1. Zombie count is 10
+    // We set this to 10 here, but remember to check the Inspector in Unity!
+    public int zombiesRequired = 10; 
 
     private int currentWood = 0;
     private int zombiesKilled = 0;
@@ -68,7 +69,7 @@ public class ObjectiveManager : MonoBehaviour
         zombiesKilled = 0;
         keyGiven = false;
         
-        // 2. Immediate UI update for 10 zombies
+        // This line updates the UI text dynamically based on the zombiesRequired variable
         trackerText.text = "- Kill Zombies (0/" + zombiesRequired + ")";
         UpdateObjective("Kill " + zombiesRequired + " Zombies to find the Key");
     }
@@ -92,14 +93,12 @@ public class ObjectiveManager : MonoBehaviour
 
     // --- PORTAL & BOSS LOGIC ---
 
-    // Call this when player reaches the top of the Fire Tower (Trigger)
     public void StartPortalObjective()
     {
         trackerText.text = "- Enter the Portal";
         UpdateObjective("Enter the Portal");
     }
 
-    // Call this when player steps on the 'Sender' object
     public void StartBossObjective()
     {
         trackerText.text = "- Kill the Boss";
