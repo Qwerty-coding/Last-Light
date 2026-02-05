@@ -51,9 +51,22 @@ public class Zombie1 : MonoBehaviour
         zombieAgent = GetComponent<NavMeshAgent>();
         if (playerTransform == null) playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
         
-        if (zombieAgent != null && zombieAgent.isOnNavMesh)
+        if (zombieAgent != null)
     {
-        zombieAgent.Warp(transform.position); 
+        NavMeshHit hit;
+        // Search for a NavMesh within 5 units of the spawn point
+        if (NavMesh.SamplePosition(transform.position, out hit, 5.0f, NavMesh.AllAreas))
+        {
+            zombieAgent.Warp(hit.position); // Snap to the valid ground position found
+        }
+        else
+        {
+            // Fallback: If no ground found, disable agent to let physics gravity work (if you have a Rigidbody)
+            // or just destroy the glitchy zombie so it doesn't break the game.
+            Debug.LogWarning("Zombie spawned too far from NavMesh! Destroying to prevent glitches.");
+            Destroy(gameObject);
+            return;
+        }
     }
     
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
