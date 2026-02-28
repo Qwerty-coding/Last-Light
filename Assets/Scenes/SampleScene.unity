@@ -57407,7 +57407,7 @@ GameObject:
   - component: {fileID: 1529512043}
   - component: {fileID: 1529512042}
   m_Layer: 0
-  m_Name: questmarker
+  m_Name: forest indi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
