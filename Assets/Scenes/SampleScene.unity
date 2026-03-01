@@ -3342,6 +3342,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   swingAngle: 50
   swingSpeed: 1000
+  swingCooldown: 1.5
   chopRange: 5
   damageToZombie: 25
   damageToTree: 1
@@ -10718,6 +10719,7 @@ GameObject:
   m_Component:
   - component: {fileID: 352190611}
   - component: {fileID: 352190610}
+  - component: {fileID: 352190612}
   m_Layer: 0
   m_Name: questmarker (1)
   m_TagString: Untagged
@@ -10792,6 +10794,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &352190612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 352190609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectiveKey: Find the Axe in the outside storeroom
+  floatSpeed: 3
+  floatHeight: 0.2
 --- !u!1 &353478898 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 167543569611505490, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
@@ -12851,13 +12868,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zombiePrefab: {fileID: 2089997058}
-  zombieTag: Zombie
-  spawnInterval: 4
-  maxZombies: 5
-  minDistance: 10
-  maxDistance: 15
-  bossArenaCenter: {fileID: 0}
-  arenaExclusionRadius: 50
+  player: {fileID: 0}
+  spawnRadius: 5
+  maxZombiesInRadius: 5
+  checkInterval: 2
 --- !u!4 &516304604
 Transform:
   m_ObjectHideFlags: 0
@@ -57406,6 +57420,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1529512043}
   - component: {fileID: 1529512042}
+  - component: {fileID: 1529512044}
   m_Layer: 0
   m_Name: forest indi
   m_TagString: Untagged
@@ -57480,6 +57495,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &1529512044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529512041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectiveKey: Gather Wood (0/10)
+  floatSpeed: 3
+  floatHeight: 0.2
 --- !u!1001 &1540685044
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -58294,6 +58324,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1595063523}
   - component: {fileID: 1595063522}
+  - component: {fileID: 1595063524}
   m_Layer: 0
   m_Name: questmarker (2)
   m_TagString: Untagged
@@ -58368,6 +58399,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1595063524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1595063521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectiveKey: Key Found! Find the Fire Tower and reach the top
+  floatSpeed: 3
+  floatHeight: 0.2
 --- !u!1 &1595086321
 GameObject:
   m_ObjectHideFlags: 0
@@ -62429,6 +62475,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: {fileID: 1926322349}
   speed: 10
+  sprintSpeed: 25
   gravity: -40
   jumpHeight: 3
   groundCheck: {fileID: 80260617}
