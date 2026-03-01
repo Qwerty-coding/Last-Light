@@ -6,19 +6,24 @@ public class WeaponSwing : MonoBehaviour
     public float swingAngle = 50f;
     public float swingSpeed = 20f;
     
+    // NEW: Added a dedicated header and cooldown variables
+    [Header("Cooldown Settings")]
+    public float swingCooldown = 1.5f; 
+    private float nextSwingTime = 0f; 
+    
     [Header("Combat Settings")]
-    public float chopRange = 3f; // Increased from 2f
+    public float chopRange = 3f; 
     public float damageToZombie = 25f;
-    public float damageToTree = 1f; // Trees use "Chop()" which reduces health by 1
+    public float damageToTree = 1f; 
     
     [Header("Detection Settings")]
-    public LayerMask targetLayers; // Set this in Inspector to include trees and zombies
-    public bool debugMode = true; // Enable to see raycast visualization
+    public LayerMask targetLayers; 
+    public bool debugMode = true; 
 
     private float currentAngle = 0f;
     private bool swingingForward = false;
     private bool swingingBack = false;
-    private bool hasDealtDamage = false; // NEW: Prevent multiple hits per swing
+    private bool hasDealtDamage = false; 
 
     private Quaternion startRotation;
 
@@ -26,22 +31,24 @@ public class WeaponSwing : MonoBehaviour
     {
         startRotation = transform.localRotation;
         
-        // Auto-setup layer mask if not configured
         if (targetLayers.value == 0)
         {
-            targetLayers = LayerMask.GetMask("Default"); // Adjust to your actual layers
+            targetLayers = LayerMask.GetMask("Default"); 
             Debug.LogWarning("WeaponSwing: targetLayers not set! Using Default layer.");
         }
     }
 
     void Update()
     {
-        // Start swing on left click
-        if (Input.GetMouseButtonDown(0) && !swingingForward && !swingingBack)
+        // NEW: Check if current Time.time is greater than or equal to nextSwingTime
+        if (Input.GetMouseButtonDown(0) && !swingingForward && !swingingBack && Time.time >= nextSwingTime)
         {
             swingingForward = true;
             currentAngle = 0f;
-            hasDealtDamage = false; // Reset damage flag for new swing
+            hasDealtDamage = false; 
+            
+            // NEW: Set the time when the next swing will be allowed
+            nextSwingTime = Time.time + swingCooldown;
         }
 
         // Swing forward
@@ -51,10 +58,9 @@ public class WeaponSwing : MonoBehaviour
             transform.Rotate(0, step, 0);
             currentAngle += step;
 
-            // Try chopping during a WIDER window (30% to 70% of swing)
             if (currentAngle >= swingAngle * 0.3f && currentAngle < swingAngle * 0.7f)
             {
-                if (!hasDealtDamage) // Only damage once per swing
+                if (!hasDealtDamage) 
                 {
                     TryChop();
                 }
@@ -83,10 +89,8 @@ public class WeaponSwing : MonoBehaviour
 
     void TryChop()
     {
-        // Get camera transform
         Transform camTransform = Camera.main.transform;
         
-        // Method 1: Raycast from camera center
         Ray centerRay = new Ray(camTransform.position, camTransform.forward);
         RaycastHit centerHit;
         
@@ -98,17 +102,15 @@ public class WeaponSwing : MonoBehaviour
         if (Physics.Raycast(centerRay, out centerHit, chopRange, targetLayers))
         {
             ProcessHit(centerHit);
-            return; // Found something, stop checking
+            return; 
         }
 
-        // Method 2: SphereCast for more forgiving detection
         if (Physics.SphereCast(camTransform.position, 0.3f, camTransform.forward, out centerHit, chopRange, targetLayers))
         {
             ProcessHit(centerHit);
             return;
         }
 
-        // Method 3: Check multiple rays in a cone (most forgiving)
         for (int i = -1; i <= 1; i++)
         {
             for (int j = -1; j <= 1; j++)
@@ -141,9 +143,8 @@ public class WeaponSwing : MonoBehaviour
 
     void ProcessHit(RaycastHit hit)
     {
-        if (hasDealtDamage) return; // Already damaged something this swing
+        if (hasDealtDamage) return; 
         
-        // --- TREE LOGIC ---
         TreeInteractable tree = hit.collider.GetComponentInParent<TreeInteractable>();
         if (tree != null)
         {
@@ -153,7 +154,6 @@ public class WeaponSwing : MonoBehaviour
             return;
         }
 
-        // --- ZOMBIE LOGIC ---
         Zombie1 zombie1 = hit.collider.GetComponent<Zombie1>();
         if (zombie1 != null)
         {
@@ -163,7 +163,6 @@ public class WeaponSwing : MonoBehaviour
             return;
         }
 
-        // Fallback to old Zombie script
         Zombie zombie = hit.collider.GetComponent<Zombie>();
         if (zombie != null)
         {
@@ -173,7 +172,6 @@ public class WeaponSwing : MonoBehaviour
             return;
         }
 
-        // --- BOSS ZOMBIE LOGIC ---
         BossZombie boss = hit.collider.GetComponent<BossZombie>();
         if (boss != null)
         {
@@ -189,7 +187,6 @@ public class WeaponSwing : MonoBehaviour
         }
     }
 
-    // Debug visualization
     void OnDrawGizmosSelected()
     {
         if (Camera.main == null) return;
