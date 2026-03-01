@@ -5,6 +5,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement")]
     public CharacterController controller;
     public float speed = 5f;
+    public float sprintSpeed = 10f;       // NEW: sprint speed
     public float gravity = -30f;
     public float jumpHeight = 3f;
 
@@ -54,9 +55,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Detect start of fall
         if (!isGrounded && wasGrounded)
-        {
             fallStartY = transform.position.y;
-        }
 
         // Detect landing
         if (isGrounded && !wasGrounded)
@@ -71,8 +70,12 @@ public class PlayerMovement : MonoBehaviour
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
+        // NEW: Sprint when holding Left Shift and moving forward
+        bool isSprinting = Input.GetKey(KeyCode.LeftShift) && z > 0.1f && isGrounded;
+        float currentSpeed = isSprinting ? sprintSpeed : speed;
+
         Vector3 move = transform.right * x + transform.forward * z;
-        controller.Move(move * speed * Time.deltaTime);
+        controller.Move(move * currentSpeed * Time.deltaTime);
 
         if (Input.GetButtonDown("Jump") && isGrounded)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);

@@ -16,12 +16,14 @@ public class ObjectiveManager : MonoBehaviour
 
     [Header("Settings")]
     public int woodRequired = 10;
-    // We set this to 10 here, but remember to check the Inspector in Unity!
-    public int zombiesRequired = 10; 
+    public int zombiesRequired = 10;
 
     private int currentWood = 0;
     private int zombiesKilled = 0;
     private bool keyGiven = false;
+
+    // NEW: Track current objective text so markers can read it
+    private string currentObjectiveText = "";
 
     void Awake()
     {
@@ -68,8 +70,6 @@ public class ObjectiveManager : MonoBehaviour
     {
         zombiesKilled = 0;
         keyGiven = false;
-        
-        // This line updates the UI text dynamically based on the zombiesRequired variable
         trackerText.text = "- Kill Zombies (0/" + zombiesRequired + ")";
         UpdateObjective("Kill " + zombiesRequired + " Zombies to find the Key");
     }
@@ -84,15 +84,14 @@ public class ObjectiveManager : MonoBehaviour
         if (zombiesKilled >= zombiesRequired)
         {
             keyGiven = true;
-            if (SimpleInventory.Instance != null) SimpleInventory.Instance.AddItem("Key", 1);
-            
-            // This leads the player to the Fire Tower
+            if (SimpleInventory.Instance != null)
+                SimpleInventory.Instance.AddItem("Key", 1);
+
             UpdateObjective("Key Found! Find the Fire Tower and reach the top");
         }
     }
 
     // --- PORTAL & BOSS LOGIC ---
-
     public void StartPortalObjective()
     {
         trackerText.text = "- Enter the Portal";
@@ -105,12 +104,24 @@ public class ObjectiveManager : MonoBehaviour
         UpdateObjective("Fight and kill The Boss Zombie");
     }
 
-    // --- UI HELPERS ---
+    // --- CORE UPDATE ---
     public void UpdateObjective(string newText)
     {
+        currentObjectiveText = newText;
+
+        // NEW: Tell all markers in the scene to refresh
+        ObjectiveMarker.RefreshAllMarkers(currentObjectiveText);
+
         StopAllCoroutines();
         StartCoroutine(FadeObjective(newText));
-        if (popupCanvasGroup != null) StartCoroutine(ShowPopup());
+        if (popupCanvasGroup != null)
+            StartCoroutine(ShowPopup());
+    }
+
+    // Getter so other scripts can read the current objective if needed
+    public string GetCurrentObjective()
+    {
+        return currentObjectiveText;
     }
 
     IEnumerator FadeObjective(string text)
@@ -118,18 +129,33 @@ public class ObjectiveManager : MonoBehaviour
         trackerCanvasGroup.alpha = 0;
         trackerText.text = "- " + text;
         float t = 0f;
-        while (t < 1f) { t += Time.deltaTime; trackerCanvasGroup.alpha = t; yield return null; }
+        while (t < 1f)
+        {
+            t += Time.deltaTime;
+            trackerCanvasGroup.alpha = t;
+            yield return null;
+        }
         trackerCanvasGroup.alpha = 1f;
     }
 
     IEnumerator ShowPopup()
     {
         float t = 0f;
-        while (t < 1f) { t += Time.deltaTime * 3f; popupCanvasGroup.alpha = t; yield return null; }
+        while (t < 1f)
+        {
+            t += Time.deltaTime * 3f;
+            popupCanvasGroup.alpha = t;
+            yield return null;
+        }
         popupCanvasGroup.alpha = 1f;
         yield return new WaitForSeconds(popupDuration);
         t = 1f;
-        while (t > 0f) { t -= Time.deltaTime; popupCanvasGroup.alpha = t; yield return null; }
+        while (t > 0f)
+        {
+            t -= Time.deltaTime;
+            popupCanvasGroup.alpha = t;
+            yield return null;
+        }
         popupCanvasGroup.alpha = 0f;
     }
 }
