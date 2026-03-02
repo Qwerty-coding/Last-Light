@@ -96,11 +96,26 @@ public class PlayerHealth : MonoBehaviour
     }
 
     void Die()
+{
+    Debug.Log("Player has died!");
+    
+    // NEW: Play death animation
+    Animator animator = GetComponent<Animator>();
+    if (animator != null)
     {
-        Debug.Log("Player has died!");
-        if (gameManager != null)
-        {
-            gameManager.TriggerGameOver();
-        }
+        animator.SetBool("isDead", true);
     }
+    
+    // Disable movement
+    PlayerMovement movement = GetComponent<PlayerMovement>();
+    if (movement != null)
+        movement.enabled = false;
+    
+    // Trigger game over
+    if (gameManager != null)
+    {
+        gameManager.TriggerGameOver();
+    }
+}
+
 }
