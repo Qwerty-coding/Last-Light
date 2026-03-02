@@ -43,6 +43,7 @@ public class ObjectiveManager : MonoBehaviour
     public void StartWoodObjective()
     {
         currentWood = 0;
+        UpdateObjective("Gather Wood");
         ForceWoodObjectiveUI();
     }
 

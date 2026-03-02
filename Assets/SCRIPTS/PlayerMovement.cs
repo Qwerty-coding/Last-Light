@@ -4,20 +4,22 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     public CharacterController controller;
-    public float speed = 5f;
-    public float sprintSpeed = 10f;       // NEW: sprint speed
+    public float walkSpeed = 6f;
+    public float runSpeed = 12f;
     public float gravity = -30f;
     public float jumpHeight = 3f;
 
-    [Header("Ground Check")]
-    public Transform groundCheck;
-    [Range(0.1f, 1f)] public float groundDistance = 0.4f;
-    public LayerMask groundMask;
+    // Ground Check variables removed as requested
 
+    [Header("Animation")]
+    public Animator animator;
+
+    // Private variables
     Vector3 velocity;
     bool isGrounded;
+    bool wasGrounded = true;
 
-    // ================= FALL DAMAGE =================
+    // Fall damage tracking
     [Header("Fall Damage Tuning")]
     [Tooltip("No damage below this fall height (meters)")]
     [Range(0f, 10f)]
@@ -35,54 +37,89 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float lastFallDistance;
 
     float fallStartY;
-    bool wasGrounded;
-
     PlayerHealth playerHealth;
-    // ================================================
 
     void Start()
     {
+        // Auto-find animator if not assigned
+        if (animator == null)
+            animator = GetComponent<Animator>();
+        
+        // Get PlayerHealth component
         playerHealth = GetComponent<PlayerHealth>();
     }
 
     void Update()
     {
-        isGrounded = Physics.CheckSphere(
-            groundCheck.position,
-            groundDistance,
-            groundMask
-        );
+        // NEW JUMP LOGIC: Use Unity's built-in CharacterController ground detection
+        isGrounded = controller.isGrounded;
+
+        // Update animator with ground state
+        if (animator != null)
+        {
+            animator.SetBool("isGrounded", isGrounded);
+        }
 
         // Detect start of fall
         if (!isGrounded && wasGrounded)
+        {
             fallStartY = transform.position.y;
+        }
 
         // Detect landing
         if (isGrounded && !wasGrounded)
         {
             lastFallDistance = fallStartY - transform.position.y;
             ApplyFallDamage(lastFallDistance);
+            Debug.Log("Player landed");
         }
 
+        // Reset downward velocity when touching the floor
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
+        // Get input
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        // NEW: Sprint when holding Left Shift and moving forward
-        bool isSprinting = Input.GetKey(KeyCode.LeftShift) && z > 0.1f && isGrounded;
-        float currentSpeed = isSprinting ? sprintSpeed : speed;
-
+        // Calculate movement direction
         Vector3 move = transform.right * x + transform.forward * z;
-        controller.Move(move * currentSpeed * Time.deltaTime);
+        
+        // Determine current speed based on input
+        float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+        
+        // ====== UPDATE ANIMATOR ======
+        // Calculate movement magnitude for animation
+        float movementMagnitude = move.magnitude * currentSpeed;
+        
+        // Update Speed parameter in animator
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", movementMagnitude);
+        }
+        // =============================
 
+        // Jump input - Calculate Y velocity before moving!
         if (Input.GetButtonDown("Jump") && isGrounded)
+        {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            
+            // Trigger jump animation
+            if (animator != null)
+            {
+                animator.SetTrigger("Jump");
+                Debug.Log("Jump triggered");
+            }
+        }
 
+        // Apply gravity
         velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
 
+        // CRITICAL FIX: Combine horizontal and vertical movement into ONE Move() call.
+        Vector3 finalMove = (move * currentSpeed) + velocity;
+        controller.Move(finalMove * Time.deltaTime);
+
+        // Store previous grounded state
         wasGrounded = isGrounded;
     }
 
@@ -100,6 +137,9 @@ public class PlayerMovement : MonoBehaviour
         float damage = percent * maxFallDamage;
 
         if (playerHealth != null)
+        {
             playerHealth.TakeDamage(damage);
+            Debug.Log($"Fall damage: {damage} (fell {fallDistance}m)");
+        }
     }
 }
