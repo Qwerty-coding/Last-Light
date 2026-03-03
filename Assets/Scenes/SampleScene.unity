@@ -57422,7 +57422,7 @@ GameObject:
   - component: {fileID: 1529512042}
   - component: {fileID: 1529512044}
   m_Layer: 0
-  m_Name: forest indicator
+  m_Name: forest_indicator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -58326,7 +58326,7 @@ GameObject:
   - component: {fileID: 1595063522}
   - component: {fileID: 1595063524}
   m_Layer: 0
-  m_Name: lighthouse indicator
+  m_Name: lighthouse_indicator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
