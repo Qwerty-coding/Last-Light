@@ -1,11 +1,9 @@
 using System.Collections;
 using UnityEngine;
-using TMPro;
 using UnityEngine.EventSystems;
 
 public class weapon : MonoBehaviour
 {
-    // public Camera playerCamera;
     public bool isShooting;
     public bool readyToShoot = true;
     private bool allowReset = true;
@@ -24,22 +22,14 @@ public class weapon : MonoBehaviour
     public GameObject muzzleEffect;
     private Animator animator;
 
-    // Reload & Ammo
     public float reloadTime = 1.5f;
     public int magazineSize = 30;
     public int bulletsLeft;
     public bool isReloading;
 
-    // --- Total Reserve Ammo ---
-    public int totalReserveAmmo = 30; 
+    public int totalReserveAmmo = 30;
 
-    public enum ShootingMode
-    {
-        Single,
-        Burst,
-        Auto
-    }
-
+    public enum ShootingMode { Single, Burst, Auto }
     public ShootingMode currentShootingMode;
 
     private void Awake()
@@ -47,22 +37,18 @@ public class weapon : MonoBehaviour
         readyToShoot = true;
         burstBulletsLeft = bulletsPerBurst;
         bulletsLeft = magazineSize;
+
+        // Try on this object first, then walk up to the player character
         animator = GetComponent<Animator>();
+        if (animator == null)
+            animator = GetComponentInParent<Animator>();
     }
 
     void Update()
     {
-        // 1. CRITICAL: Stop everything if the game is paused
-        if (GameManagerBehaviour.isPaused) return;
+        if (Time.timeScale == 0f) return;
 
-        // 2. Play empty magazine sound
-        if (bulletsLeft == 0 && isShooting)
-        {
-             // SoundManager.Instance.emptyManagizeSound1911.Play();
-        }
-
-        // 3. INPUT HANDLING
-        if (EventSystem.current.IsPointerOverGameObject())
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             isShooting = false;
             return;
@@ -74,61 +60,53 @@ public class weapon : MonoBehaviour
 
         isShooting = mouseClicked;
 
-        // 4. RELOAD LOGIC
         if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !isReloading && totalReserveAmmo > 0)
-        {
             Reload();
-        }
 
-        // AUTO RELOAD
         if (readyToShoot && isShooting && !isReloading && bulletsLeft <= 0 && totalReserveAmmo > 0)
         {
             Reload();
             return;
         }
 
-        // 5. SHOOT LOGIC
         if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
         {
             burstBulletsLeft = bulletsPerBurst;
             FireWeapon();
         }
 
-        // 6. UI UPDATE
-        if (Ammomanager.Instance.ammoDisplay != null)
+        if (Ammomanager.Instance != null && Ammomanager.Instance.ammoDisplay != null)
         {
             if (bulletsLeft == 0 && totalReserveAmmo == 0)
             {
-                // --- CHANGED: "No Ammo" with smaller font size ---
-                Ammomanager.Instance.ammoDisplay.text = "<size=80%>No Ammo</size>"; 
-                Ammomanager.Instance.ammoDisplay.color = Color.red; 
+                Ammomanager.Instance.ammoDisplay.text = "<size=80%>No Ammo</size>";
+                Ammomanager.Instance.ammoDisplay.color = Color.red;
             }
             else
             {
                 Ammomanager.Instance.ammoDisplay.text = $"{bulletsLeft} / {totalReserveAmmo}";
-                Ammomanager.Instance.ammoDisplay.color = Color.white; 
+                Ammomanager.Instance.ammoDisplay.color = Color.white;
             }
         }
     }
 
     private void FireWeapon()
     {
-        muzzleEffect.GetComponent<ParticleSystem>().Play();
+        if (muzzleEffect != null)
+            muzzleEffect.GetComponent<ParticleSystem>().Play();
 
-        animator.SetTrigger("RECOIL");
+        // "Shoot" trigger -> GunShoot state
+        if (animator != null)
+            animator.SetTrigger("Shoot");
 
-        SoundManager.Instance.shootingSound1911.Play();
+        if (SoundManager.Instance != null)
+            SoundManager.Instance.shootingSound1911.Play();
+
         bulletsLeft--;
         readyToShoot = false;
 
         Vector3 direction = CalculateDirectionAndSpread().normalized;
-
-        GameObject bullet = Instantiate(
-            bulletPrefab,
-            bulletSpawn.position,
-            Quaternion.LookRotation(direction)
-        );
-
+        GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, Quaternion.LookRotation(direction));
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         rb.AddForce(direction * bulletVelocity, ForceMode.Impulse);
 
@@ -149,8 +127,8 @@ public class weapon : MonoBehaviour
 
     private void Reload()
     {
-        SoundManager.Instance.reloadingSound1911.Play();
-
+        if (SoundManager.Instance != null)
+            SoundManager.Instance.reloadingSound1911.Play();
         isReloading = true;
         Invoke(nameof(ReloadCompleted), reloadTime);
     }
@@ -159,10 +137,8 @@ public class weapon : MonoBehaviour
     {
         int ammoNeeded = magazineSize - bulletsLeft;
         int ammoToReload = Mathf.Min(ammoNeeded, totalReserveAmmo);
-
         bulletsLeft += ammoToReload;
         totalReserveAmmo -= ammoToReload;
-
         isReloading = false;
     }
 
@@ -176,16 +152,10 @@ public class weapon : MonoBehaviour
     {
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
-
-        Vector3 targetPoint = Physics.Raycast(ray, out hit)
-            ? hit.point
-            : ray.GetPoint(100f);
-
+        Vector3 targetPoint = Physics.Raycast(ray, out hit) ? hit.point : ray.GetPoint(100f);
         Vector3 direction = targetPoint - bulletSpawn.position;
-
         float x = Random.Range(-spreadIntensity, spreadIntensity);
         float y = Random.Range(-spreadIntensity, spreadIntensity);
-
         return direction + new Vector3(x, y, 0);
     }
 

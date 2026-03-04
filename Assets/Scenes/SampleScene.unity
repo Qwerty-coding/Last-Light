@@ -3343,6 +3343,7 @@ MonoBehaviour:
   swingAngle: 50
   swingSpeed: 450
   playerAnimator: {fileID: 1492990757}
+  playerAnimator: {fileID: 1492990757}
   chopRange: 3
   damageToZombie: 25
   damageToTree: 1
@@ -10639,7 +10640,6 @@ GameObject:
   - component: {fileID: 352190611}
   - component: {fileID: 352190610}
   - component: {fileID: 352190612}
-  - component: {fileID: 352190612}
   m_Layer: 0
   m_Name: storeroom indicator
   m_TagString: Untagged
@@ -10714,21 +10714,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &352190612
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 352190609}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectiveKey: Find the Axe in the outside storeroom
-  floatSpeed: 3
-  floatHeight: 0.2
 --- !u!114 &352190612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13664,6 +13649,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 1c48c4d85a202ee4aabaf6610063c12c, type: 2}
+    - target: {fileID: 2333246135476635897, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2333246135476635897, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
@@ -23721,6 +23710,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8761818819882752366, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
   m_PrefabInstance: {fileID: 561250245}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &816972599 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8761818819882752366, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
+  m_PrefabInstance: {fileID: 561250245}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &827305746 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
@@ -25674,6 +25668,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 1015
+    m_Bits: 1015
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -25697,6 +25692,8 @@ Transform:
   m_LocalPosition: {x: -0.17, y: 0.658, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1635615193}
   m_Children:
   - {fileID: 1635615193}
   m_Father: {fileID: 1588538274}
@@ -40997,6 +40994,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 95174738333689164, guid: cdebefa9cede542489ec77a0e0261343, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 95174738333689164, guid: cdebefa9cede542489ec77a0e0261343, type: 3}
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 9266dc552fea94f3eb48b559c3e56c7f, type: 2}
@@ -52523,6 +52524,11 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 2333246135476635897, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
   m_PrefabInstance: {fileID: 561250245}
   m_PrefabAsset: {fileID: 0}
+--- !u!95 &1492990757 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 2333246135476635897, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
+  m_PrefabInstance: {fileID: 561250245}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1498598209 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1588090451174212, guid: b63811045ec63964eb1daaf3e0616744, type: 3}
@@ -58785,7 +58791,6 @@ GameObject:
   - component: {fileID: 1595063523}
   - component: {fileID: 1595063522}
   - component: {fileID: 1595063524}
-  - component: {fileID: 1595063524}
   m_Layer: 0
   m_Name: lighthouse_indicator
   m_TagString: Untagged
@@ -58860,21 +58865,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1595063524
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1595063521}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectiveKey: Key Found! Find the Fire Tower and reach the top
-  floatSpeed: 3
-  floatHeight: 0.2
 --- !u!114 &1595063524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59553,7 +59543,7 @@ Transform:
   - {fileID: 1218006659}
   - {fileID: 498853092}
   - {fileID: 1670028463}
-  m_Father: {fileID: 2013974303}
+  m_Father: {fileID: 963194228}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1642291772
 GameObject:
@@ -62708,6 +62698,7 @@ MonoBehaviour:
   costAmount: 10
   itemRewardName: Gun
   weaponHandler: {fileID: 577842335}
+  weaponHandler: {fileID: 577842335}
 --- !u!1 &1895296064 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8557342179557046947, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
@@ -63055,8 +63046,10 @@ MonoBehaviour:
   controller: {fileID: 1926322349}
   walkSpeed: 6
   runSpeed: 20.1
+  runSpeed: 20.1
   gravity: -40
   jumpHeight: 3
+  animator: {fileID: 1492990757}
   animator: {fileID: 1492990757}
   minFallDistance: 5
   maxFallDistance: 30
@@ -63096,6 +63089,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gunParent: {fileID: 1635615192}
+  axeParent: {fileID: 816972599}
+  startWithAxe: 0
   axeParent: {fileID: 816972599}
   startWithAxe: 0
   startWithGun: 0
@@ -69547,11 +69542,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1498598214}
   m_SourcePrefab: {fileID: 100100000, guid: b63811045ec63964eb1daaf3e0616744, type: 3}
---- !u!4 &2013974303 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3901817345220131515, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
-  m_PrefabInstance: {fileID: 561250245}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2014547617 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8059146356227797424, guid: 49a71375acf2fa64bbb2186f97a93203, type: 3}
@@ -76646,9 +76636,11 @@ PrefabInstance:
     - target: {fileID: 3698196109673817927, guid: 9a764fab98ab94d458c4ba0c304fd949, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.194
+      value: 0.194
       objectReference: {fileID: 0}
     - target: {fileID: 3698196109673817927, guid: 9a764fab98ab94d458c4ba0c304fd949, type: 3}
       propertyPath: m_LocalPosition.z
+      value: 0.82
       value: 0.82
       objectReference: {fileID: 0}
     - target: {fileID: 4701120125097017403, guid: 9a764fab98ab94d458c4ba0c304fd949, type: 3}
