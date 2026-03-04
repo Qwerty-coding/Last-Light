@@ -12,7 +12,12 @@ public class GameManagerBehaviour : MonoBehaviour
     [SerializeField] 
     GameObject ammoTextUI;
 
+    // 1. ADD THIS NEW VARIABLE FOR YOUR MAIN CANVAS
+    [SerializeField]
+    GameObject hudCanvas; 
+
     public static bool isPaused;
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -27,7 +32,7 @@ public class GameManagerBehaviour : MonoBehaviour
         {
             if(!isPaused)
             {
-            PauseGame();
+                PauseGame();
             }
             else
             {
@@ -41,12 +46,16 @@ public class GameManagerBehaviour : MonoBehaviour
         pauseMenu.SetActive(true);
 
         if(ammoTextUI != null)
-        ammoTextUI.SetActive(false);
+            ammoTextUI.SetActive(false);
+            
+        // 2. TURN OFF THE HUD CANVAS
+        if(hudCanvas != null)
+            hudCanvas.SetActive(false); 
         
         isPaused=true;
         Time.timeScale=0f;
         Cursor.lockState = CursorLockMode.None; // Unlocks the cursor so it can move
-    Cursor.visible = true;
+        Cursor.visible = true;
     }
 
     public void ResumeGame()
@@ -56,10 +65,14 @@ public class GameManagerBehaviour : MonoBehaviour
         if(ammoTextUI != null) 
             ammoTextUI.SetActive(true);
 
+        // 3. TURN ON THE HUD CANVAS
+        if(hudCanvas != null)
+            hudCanvas.SetActive(true); 
+
         isPaused=false;
         Time.timeScale=1f;
         Cursor.lockState = CursorLockMode.Locked; // Locks cursor to center of screen
-    Cursor.visible = false;
+        Cursor.visible = false;
     }
 
     public void MainMenu()
