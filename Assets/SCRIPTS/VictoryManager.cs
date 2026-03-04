@@ -11,7 +11,6 @@ public class VictoryManager : MonoBehaviour
     public void ShowVictory()
     {
         Debug.Log("🏆 Victory Triggered!");
-
         if (victoryPanel != null)
         {
             // 1. Pause the game immediately
