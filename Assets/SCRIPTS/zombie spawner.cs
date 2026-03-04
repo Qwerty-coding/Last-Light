@@ -11,13 +11,13 @@ public class ZombieSpawner : MonoBehaviour
 
     [Header("Spawn Settings")]
     [Tooltip("Radius around player where zombies spawn")]
-    public float spawnRadius = 5f;
+    public float spawnRadius = 10f;
 
     [Tooltip("Max zombies allowed within spawnRadius at any time")]
-    public int maxZombiesInRadius = 5;
+    public int maxZombiesInRadius = 3;
 
     [Tooltip("How often spawner checks if new zombies are needed")]
-    public float checkInterval = 2f;
+    public float checkInterval = 4f;
 
     private bool isActive = false;
     private List<GameObject> activeZombies = new List<GameObject>();

@@ -50,7 +50,7 @@ public class ObjectiveManager : MonoBehaviour
     public void ForceWoodObjectiveUI()
     {
         if (trackerText != null)
-            trackerText.text = "- Gather Wood (0/" + woodRequired + ")";
+            trackerText.text = "- Gather Birch Wood (0/" + woodRequired + ")";
     }
 
     public void AddWood()
