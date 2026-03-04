@@ -12,6 +12,7 @@ public class VictoryManager : MonoBehaviour
     {
         Debug.Log("🏆 Victory Triggered!");
         if (victoryPanel != null)
+        
         {
             // 1. Pause the game immediately
             Time.timeScale = 0f; 
