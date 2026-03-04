@@ -15,6 +15,7 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
   m_Fog: 1
+  m_Fog: 1
   m_FogColor: {r: 0.0627451, g: 0.0627451, b: 0.1254902, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.02
@@ -10640,6 +10641,7 @@ GameObject:
   - component: {fileID: 352190611}
   - component: {fileID: 352190610}
   - component: {fileID: 352190612}
+  - component: {fileID: 352190612}
   m_Layer: 0
   m_Name: storeroom indicator
   m_TagString: Untagged
@@ -10714,6 +10716,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &352190612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 352190609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectiveKey: Find the Axe in the outside storeroom
+  floatSpeed: 3
+  floatHeight: 0.2
 --- !u!114 &352190612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21902,6 +21919,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5290187364322006343, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
   m_PrefabInstance: {fileID: 561250245}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &656865710 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5290187364322006343, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
+  m_PrefabInstance: {fileID: 561250245}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &663157260
 GameObject:
   m_ObjectHideFlags: 0
@@ -25689,6 +25711,7 @@ Transform:
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.17, y: 0.658, z: 0}
   m_LocalPosition: {x: -0.17, y: 0.658, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -40927,6 +40950,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
+    m_TransformParent: {fileID: 656865710}
     m_TransformParent: {fileID: 656865710}
     m_Modifications:
     - target: {fileID: 1164328234615206, guid: cdebefa9cede542489ec77a0e0261343, type: 3}
@@ -57847,6 +57871,21 @@ MonoBehaviour:
   objectiveKey: Gather Wood
   floatSpeed: 3
   floatHeight: 0.2
+--- !u!114 &1529512044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529512041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectiveKey: Gather Wood
+  floatSpeed: 3
+  floatHeight: 0.2
 --- !u!1001 &1540685044
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -58322,6 +58361,7 @@ Transform:
   - {fileID: 1429228904}
   - {fileID: 1276966118}
   - {fileID: 1492990756}
+  - {fileID: 1492990756}
   m_Father: {fileID: 1926322348}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1589124419
@@ -58791,6 +58831,7 @@ GameObject:
   - component: {fileID: 1595063523}
   - component: {fileID: 1595063522}
   - component: {fileID: 1595063524}
+  - component: {fileID: 1595063524}
   m_Layer: 0
   m_Name: lighthouse_indicator
   m_TagString: Untagged
@@ -58865,6 +58906,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1595063524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1595063521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60c4294bb37e6554eb6c473e51a2cbd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectiveKey: Key Found! Find the Fire Tower and reach the top
+  floatSpeed: 3
+  floatHeight: 0.2
 --- !u!114 &1595063524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63160,6 +63216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameText: {fileID: 1188766010}
+  rayDistance: 3
   rayDistance: 3
 --- !u!1 &1929187780 stripped
 GameObject:
