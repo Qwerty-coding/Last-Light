@@ -32,7 +32,7 @@ public class weapon : MonoBehaviour
     public enum ShootingMode { Single, Burst, Auto }
     public ShootingMode currentShootingMode;
 
-    private void Awake()
+    private void Start()
     {
         readyToShoot = true;
         burstBulletsLeft = bulletsPerBurst;

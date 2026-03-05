@@ -7,12 +7,20 @@ public class WeaponSwing : MonoBehaviour
     public float swingSpeed = 20f;
 
     [Header("Animation")]
-    public Animator playerAnimator;  // Drag your character's Animator here in Inspector
+    public Animator playerAnimator;
 
     [Header("Combat Settings")]
     public float chopRange = 3f;
     public float damageToZombie = 25f;
     public float damageToTree = 1f;
+
+    [Header("Cooldown")]
+    public float swingCooldown = 1.5f;
+    private float nextSwingTime = 0f;
+
+    [Header("Damage Timing")]
+    public float damageDelay = 0.5f;
+    private float swingStartTime = 0f;
 
     [Header("Detection Settings")]
     public LayerMask targetLayers;
@@ -22,7 +30,6 @@ public class WeaponSwing : MonoBehaviour
     private bool swingingForward = false;
     private bool swingingBack = false;
     private bool hasDealtDamage = false;
-
     private Quaternion startRotation;
 
     void Start()
@@ -35,20 +42,22 @@ public class WeaponSwing : MonoBehaviour
             Debug.LogWarning("WeaponSwing: targetLayers not set! Using Default layer.");
         }
 
-        // Auto-find animator on parent if not assigned in Inspector
         if (playerAnimator == null)
             playerAnimator = GetComponentInParent<Animator>();
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && !swingingForward && !swingingBack)
+        if (Input.GetMouseButtonDown(0) && !swingingForward && !swingingBack && Time.time >= nextSwingTime)
         {
             swingingForward = true;
             currentAngle = 0f;
             hasDealtDamage = false;
+            nextSwingTime = Time.time + swingCooldown;
+            swingStartTime = Time.time;
 
-            // "MeleeAttack" trigger -> AxeSwing state
+            Debug.Log("[WeaponSwing] Swing started at: " + swingStartTime + ", damage fires at: " + (swingStartTime + damageDelay));
+
             if (playerAnimator != null)
                 playerAnimator.SetTrigger("MeleeAttack");
         }
@@ -60,10 +69,10 @@ public class WeaponSwing : MonoBehaviour
             transform.Rotate(Vector3.up, step, Space.Self);
             currentAngle += step;
 
-            if (currentAngle >= swingAngle * 0.3f && currentAngle < swingAngle * 0.7f)
+            if (!hasDealtDamage && Time.time >= swingStartTime + damageDelay)
             {
-                if (!hasDealtDamage)
-                    TryChop();
+                Debug.Log("[WeaponSwing] Damage delay reached, calling TryChop");
+                TryChop();
             }
 
             if (currentAngle >= swingAngle)
@@ -89,19 +98,29 @@ public class WeaponSwing : MonoBehaviour
 
     void TryChop()
     {
+        Debug.Log("[WeaponSwing] TryChop called. TargetLayers value: " + targetLayers.value);
+
         Transform camTransform = Camera.main.transform;
 
         Ray centerRay = new Ray(camTransform.position, camTransform.forward);
         RaycastHit centerHit;
 
         if (debugMode)
-            Debug.DrawRay(centerRay.origin, centerRay.direction * chopRange, Color.red, 0.5f);
+            Debug.DrawRay(centerRay.origin, centerRay.direction * chopRange, Color.red, 1f);
 
         if (Physics.Raycast(centerRay, out centerHit, chopRange, targetLayers))
-        { ProcessHit(centerHit); return; }
+        {
+            Debug.Log("[WeaponSwing] Raycast hit: " + centerHit.collider.name + " on layer: " + LayerMask.LayerToName(centerHit.collider.gameObject.layer));
+            ProcessHit(centerHit);
+            return;
+        }
 
         if (Physics.SphereCast(camTransform.position, 0.3f, camTransform.forward, out centerHit, chopRange, targetLayers))
-        { ProcessHit(centerHit); return; }
+        {
+            Debug.Log("[WeaponSwing] SphereCast hit: " + centerHit.collider.name);
+            ProcessHit(centerHit);
+            return;
+        }
 
         for (int i = -1; i <= 1; i++)
         {
@@ -113,15 +132,28 @@ public class WeaponSwing : MonoBehaviour
                 Ray coneRay = new Ray(camTransform.position, direction.normalized);
                 RaycastHit coneHit;
 
-                if (debugMode)
-                    Debug.DrawRay(coneRay.origin, coneRay.direction * chopRange, Color.yellow, 0.2f);
-
                 if (Physics.Raycast(coneRay, out coneHit, chopRange, targetLayers))
-                { ProcessHit(coneHit); return; }
+                {
+                    Debug.Log("[WeaponSwing] ConeRay hit: " + coneHit.collider.name);
+                    ProcessHit(coneHit);
+                    return;
+                }
             }
         }
 
-        if (debugMode) Debug.Log("Swing missed - no valid target in range");
+        // Nothing hit at all - log what's in front without layer filter to diagnose
+        RaycastHit noFilterHit;
+        if (Physics.Raycast(centerRay, out noFilterHit, chopRange))
+        {
+            Debug.LogWarning("[WeaponSwing] MISSED due to layer filter! Object in front: " 
+                + noFilterHit.collider.name 
+                + " is on layer: " + LayerMask.LayerToName(noFilterHit.collider.gameObject.layer)
+                + " but targetLayers only includes: " + targetLayers.value);
+        }
+        else
+        {
+            Debug.Log("[WeaponSwing] Swing missed - nothing in front within range " + chopRange);
+        }
     }
 
     void ProcessHit(RaycastHit hit)
@@ -133,7 +165,7 @@ public class WeaponSwing : MonoBehaviour
         {
             tree.Chop();
             hasDealtDamage = true;
-            if (debugMode) Debug.Log("HIT TREE: " + tree.treeName);
+            if (debugMode) Debug.Log("[WeaponSwing] HIT TREE: " + tree.treeName);
             return;
         }
 
@@ -142,7 +174,7 @@ public class WeaponSwing : MonoBehaviour
         {
             zombie1.TakeDamage(damageToZombie);
             hasDealtDamage = true;
-            if (debugMode) Debug.Log("HIT ZOMBIE (Zombie1)");
+            if (debugMode) Debug.Log("[WeaponSwing] HIT ZOMBIE (Zombie1)");
             return;
         }
 
@@ -151,7 +183,7 @@ public class WeaponSwing : MonoBehaviour
         {
             zombie.TakeDamage((int)damageToZombie);
             hasDealtDamage = true;
-            if (debugMode) Debug.Log("HIT ZOMBIE (Zombie)");
+            if (debugMode) Debug.Log("[WeaponSwing] HIT ZOMBIE (Zombie)");
             return;
         }
 
@@ -160,11 +192,11 @@ public class WeaponSwing : MonoBehaviour
         {
             boss.TakeDamage(damageToZombie);
             hasDealtDamage = true;
-            if (debugMode) Debug.Log("HIT BOSS ZOMBIE");
+            if (debugMode) Debug.Log("[WeaponSwing] HIT BOSS ZOMBIE");
             return;
         }
 
-        if (debugMode) Debug.Log("Hit object with no valid script: " + hit.collider.name);
+        if (debugMode) Debug.Log("[WeaponSwing] Hit object but no valid script found: " + hit.collider.name);
     }
 
     void OnDrawGizmosSelected()
