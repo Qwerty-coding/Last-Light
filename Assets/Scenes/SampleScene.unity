@@ -63016,7 +63016,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: {fileID: 1926322349}
   walkSpeed: 6
-  runSpeed: 20.1
+  runSpeed: 12
   gravity: -40
   jumpHeight: 3
   animator: {fileID: 1492990757}
