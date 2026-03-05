@@ -34,15 +34,15 @@ public class WeaponHandler : MonoBehaviour
     
     private void Update()
     {
-        // Press 1 for Gun, 2 for Axe
+        // Press 1 for Gun, 2 for Axe (direct equip, no toggle)
         if (Input.GetKeyDown(KeyCode.Alpha1)) 
         {
-            ToggleWeapon("Gun");
+            EquipWeapon("Gun");
         }
         
         if (Input.GetKeyDown(KeyCode.Alpha2)) 
         {
-            ToggleWeapon("Axe");
+            EquipWeapon("Axe");
         }
     }
     
@@ -60,7 +60,25 @@ public class WeaponHandler : MonoBehaviour
         }
     }
     
-    // --- MAIN LOGIC ---
+    // --- DIRECT EQUIP (used by key bindings) ---
+    public void EquipWeapon(string weaponName)
+    {
+        // Check if SimpleInventory exists
+        if (SimpleInventory.Instance != null && !SimpleInventory.Instance.HasItem(weaponName))
+        {
+            Debug.Log($"You don't have {weaponName} in inventory!");
+            return;
+        }
+        
+        // Already equipped? Do nothing (prevents flicker)
+        if (weaponName == "Gun" && gunParent != null && gunParent.activeSelf) return;
+        if (weaponName == "Axe" && axeParent != null && axeParent.activeSelf) return;
+        
+        if (weaponName == "Gun") EquipGun();
+        else if (weaponName == "Axe") EquipAxe();
+    }
+    
+    // --- TOGGLE LOGIC (kept for other scripts) ---
     public void ToggleWeapon(string weaponName)
     {
         // Check if SimpleInventory exists
